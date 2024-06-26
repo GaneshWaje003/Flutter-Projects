@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
 
 def localProperties = new Properties()
@@ -54,4 +55,14 @@ android {
 
 flutter {
     source '../..'
+}
+
+dependencies {
+    // Import the Firebase BoM (Bill of Materials) for managing Firebase dependencies
+    implementation platform('com.google.firebase:firebase-bom:33.1.1')
+
+    // Add specific Firebase dependencies you want to use
+    implementation 'com.google.firebase:firebase-analytics' // Example of Firebase Analytics
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

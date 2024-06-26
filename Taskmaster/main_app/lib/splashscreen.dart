@@ -9,6 +9,7 @@ class splashscreen extends StatefulWidget {
 }
 
 class _splashscreenState extends State<splashscreen> {
+
   var _width = 300.0;
   var _height = 300.0;
 
