@@ -3,41 +3,69 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class DatabaseMethods {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
-  Future<void> addUserDetails(Map<String, dynamic> empMap) async {
+  Future<bool> addUserDetails(Map<String, dynamic> empMap) async {
     try {
+      String userToCheck = empMap['email'];
+      bool isUserAlreadyRegistered = await checkDuplication("users", "email", userToCheck);
 
-      String userToCheck = empMap['username'];
-      bool isUserAlreadyRegistered = await checkDuplication("users", "usersname",userToCheck);
-
-      if(isUserAlreadyRegistered){
-        print("Data already registered");
-      }else{
-        await db.collection("users").add(empMap);
+      if (isUserAlreadyRegistered) {
+        print("Data already registered: ${empMap['email']}, ${empMap['username']}");
+        return false;
+      } else {
+        await FirebaseFirestore.instance.collection("users").add(empMap);
         print('Document added successfully');
+        return true;
       }
 
-
-      
     } catch (e) {
       print('Error adding document: $e');
       // Handle any errors here
     }
-  }
-
-  Future<bool> checkDuplication(String Collection,String Attr , dynamic tocheckAttr) async{
-      CollectionReference collectionRef = FirebaseFirestore.instance.collection(Collection);
-      QuerySnapshot snapshot = await collectionRef.where(Attr,isEqualTo: tocheckAttr).get();
-
-      if(snapshot.docs.isNotEmpty){
-        print("User is present ");
-        for(var doc in snapshot.docs){
-          print(doc.id);
-        }
-      }else{
-        return true;
-      }
-
       return false;
   }
 
+
+  Future<bool> checkDuplication(String collection, String attr, dynamic tocheckAttr) async {
+    try {
+      CollectionReference collectionRef = FirebaseFirestore.instance.collection(collection);
+
+      QuerySnapshot snapshot = await collectionRef.where(attr, isEqualTo: tocheckAttr).get();
+
+      if (snapshot.docs.isNotEmpty) {
+        print("User is present");
+        for (var doc in snapshot.docs) {
+          print(doc.id);
+        }
+        return true; // Indicates duplication found
+      } else {
+        print("User not found");
+        return false; // Indicates no duplication
+      }
+    } catch (e) {
+      print('Error checking duplication: $e');
+      return false; // Handle errors gracefully
+    }
+  }
+
+  Future<bool> loginUer(dynamic tocheckAttr) async {
+    try {
+
+      CollectionReference collectionRef = FirebaseFirestore.instance.collection('users');
+      QuerySnapshot snapshot = await collectionRef.where("username", isEqualTo: tocheckAttr).get();
+
+      if (snapshot.docs.isNotEmpty) {
+        print("User is present");
+        for (var doc in snapshot.docs) {
+          print(doc.id);
+        }
+        return true; // Indicates duplication found
+      } else {
+        print("User not found");
+        return false; // Indicates no duplication
+      }
+    } catch (e) {
+      print('Error checking duplication: $e');
+      return false; // Handle errors gracefully
+    }
+  }
 }

@@ -20,9 +20,9 @@ class _loginstate extends State<Login> {
 
   bool _obsecureText = true;
 
-  DatabaseMethods _firebaseFirestore = DatabaseMethods();
+  DatabaseMethods db = DatabaseMethods();
 
-  void loginUser() {
+  Future<void> loginUser() async {
     if (_key.currentState!.validate()) {
       // If the form is valid, proceed with the login logic
 
@@ -31,7 +31,12 @@ class _loginstate extends State<Login> {
         "password": _passwordController.text.trim()
       };
 
-      _firebaseFirestore.addUserDetails(user);
+      var isUserCreated =  db.addUserDetails(user);
+      if(await isUserCreated){
+        _usernameController.clear();
+        _passwordController.clear();
+      }
+
     }
   }
 
@@ -46,136 +51,144 @@ class _loginstate extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
-        body: Container(
-          child: SingleChildScrollView(
-              child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: MainThemeColor,
+      backgroundColor: MainThemeColor,
+      body: Container(
+          child: Column(
+        children: [
+          Container(
+            color: MainThemeColor,
+            child: Column(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(top: 15),
+                  child: Lottie.asset('animations/signup.json',
+                      repeat: true, width: double.infinity, height: 200),
+                ),
+                Container(
+                  margin: EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    "Login",
+                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(top: 15),
-                        child: Lottie.asset('animations/signup.json',
-                            repeat: true, height: 180),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Container(
+              // padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                color: Colors.white,
+              ),
+
+              child: SingleChildScrollView(
+                child: Form(
+                    child: Column(
+                  children: [
+                    // container for textss
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 10),
+                      child: Column(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(bottom: 5),
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                            child: Align(
+                              child: Text("Welcome 😊",
+                                  style: TextStyle(fontSize: 25)),
+                              alignment: Alignment.topLeft,
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                            child: Align(
+                              child: Text(
+                                  "Fill correct data for succesful login",
+                                  style: TextStyle(fontSize: 16)),
+                              alignment: Alignment.topLeft,
+                            ),
+                          ),
+                          Container(
+                            margin: EdgeInsets.only(bottom: 30),
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                            child: Align(
+                              child: Text(
+                                  "and taskmaster will arrange your day",
+                                  style: TextStyle(fontSize: 16)),
+                              alignment: Alignment.topLeft,
+                            ),
+                          ),
+                        ],
                       ),
-                      Container(
-                          child: Container(
-                        padding: EdgeInsets.only(top: 20),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                                bottomLeft: Radius.circular(0),
-                                bottomRight: Radius.circular(0))),
+                    ),
+
+                    Form(
+                      key: _key,
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 30.0),
                         child: Column(
-                          children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.only(bottom: 5),
-                              padding: EdgeInsets.symmetric(horizontal: 30),
-                              child: Align(
-                                child: Text("Welcome 😊",
-                                    style: TextStyle(fontSize: 25)),
-                                alignment: Alignment.topLeft,
+                          children: [
+                            TextFormField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 15),
+                                hintText: "Username",
+                                prefixIcon: Icon(Icons.person_2_rounded),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0)),
                               ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your username';
+                                }
+                                return null;
+                              },
                             ),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 30),
-                              child: Align(
-                                child: Text(
-                                    "Fill correct data for succesful login",
-                                    style: TextStyle(fontSize: 16)),
-                                alignment: Alignment.topLeft,
-                              ),
+                              margin: EdgeInsets.only(bottom: 40),
                             ),
-                            Container(
-                              margin: EdgeInsets.only(bottom: 30),
-                              padding: EdgeInsets.symmetric(horizontal: 30),
-                              child: Align(
-                                child: Text(
-                                    "and taskmaster will arrange your day",
-                                    style: TextStyle(fontSize: 16)),
-                                alignment: Alignment.topLeft,
-                              ),
-                            ),
-                            Form(
-                              key: _key,
-                              child: Container(
-                                margin: EdgeInsets.symmetric(horizontal: 30.0),
-                                child: Column(
-                                  children: [
-                                    TextFormField(
-                                      controller: _usernameController,
-                                      decoration: InputDecoration(
-                                        contentPadding:
-                                            EdgeInsets.symmetric(vertical: 15),
-                                        hintText: "Username",
-                                        prefixIcon:
-                                            Icon(Icons.person_2_rounded),
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0)),
-                                      ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Please enter your username';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    Container(
-                                      margin: EdgeInsets.only(bottom: 40),
-                                    ),
-                                    TextFormField(
-                                      controller: _passwordController,
-                                      obscureText: _obsecureText,
-                                      decoration: InputDecoration(
-                                        hintText: "Password",
-                                        contentPadding:
-                                            EdgeInsets.symmetric(vertical: 15),
-                                        prefixIcon: Icon(Icons.lock),
-                                        suffixIcon: IconButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _obsecureText = !_obsecureText;
-                                            });
-                                          },
-                                          icon: Icon(_obsecureText
-                                              ? Icons.remove_red_eye
-                                              : Icons.remove_red_eye_outlined),
-                                        ),
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10.0)),
-                                      ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Please enter your password';
-                                        } else if (value.length < 8) {
-                                          return 'Password should be greater than 7 chars';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text("Forgot Password ?",
-                                          style: TextStyle(
-                                            color: Colors.blueAccent,
-                                          )),
-                                    )
-                                  ],
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obsecureText,
+                              decoration: InputDecoration(
+                                hintText: "Password",
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 15),
+                                prefixIcon: Icon(Icons.lock),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _obsecureText = !_obsecureText;
+                                    });
+                                  },
+                                  icon: Icon(_obsecureText
+                                      ? Icons.remove_red_eye
+                                      : Icons.remove_red_eye_outlined),
                                 ),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0)),
                               ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                } else if (value.length < 8) {
+                                  return 'Password should be greater than 7 chars';
+                                }
+                                return null;
+                              },
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Text("Forgot Password ?",
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                  )),
                             ),
                             Container(
                               width: double.infinity,
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 50),
-
+                              margin: EdgeInsets.symmetric(vertical: 50),
                               child: ElevatedButton(
                                   style: ButtonStyle(
                                     backgroundColor: MaterialStateProperty.all(
@@ -196,23 +209,27 @@ class _loginstate extends State<Login> {
                                         color: Colors.white, fontSize: 18),
                                   )),
                             ),
-
                             Container(
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => Signup()));
-                                },
-                                child: Text("New to Taskmaster ? Register"),
-                              ),
-                            )
+                                child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Signup()));
+                              },
+                              child: Text("New to Taskmaster ? Register"),
+                            )),
                           ],
                         ),
-                      )),
-                    ],
-                  ))),
-        ));
+                      ),
+                    ),
+                  ],
+                )),
+              ),
+            ),
+          )
+        ],
+      )),
+    );
   }
 }

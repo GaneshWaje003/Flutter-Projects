@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:main_app/Login.dart';
 import 'package:main_app/main.dart';
+import 'package:main_app/mainPage.dart';
 
 class splashscreen extends StatefulWidget {
   @override
@@ -24,7 +25,7 @@ class _splashscreenState extends State<splashscreen> {
   }
 
   void _toMainPage(){
-        Navigator.push(context,MaterialPageRoute(builder: (context) =>Login() ));
+        Navigator.push(context,MaterialPageRoute(builder: (context) =>Mainpage() ));
   }
 
   @override
