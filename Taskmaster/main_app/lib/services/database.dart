@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DatabaseMethods {
-  FirebaseFirestore db = FirebaseFirestore.instance;
 
   Future<bool> addUserDetails(Map<String, dynamic> empMap) async {
     try {
@@ -68,4 +67,19 @@ class DatabaseMethods {
       return false; // Handle errors gracefully
     }
   }
+
+  Future<bool> addTask(Map<String,dynamic> taskData) async{
+
+    try{
+
+      FirebaseFirestore.instance.collection("Tasks").add(taskData);
+      print('Task added sucessfully');
+      return true;
+    }catch(e){
+      print('Data not send exception : $e');
+    }
+
+    return false;
+  }
+
 }

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -8,6 +9,24 @@ class TaskPage extends StatefulWidget {
 }
 
 class _taskPage extends State<TaskPage> {
+
+  FirebaseFirestore db = FirebaseFirestore.instance;
+
+  List<String> taskList = [];
+
+  var _selectedTaskId;
+
+  @override
+  void initState() {
+
+    super.initState();
+  }
+
+  Stream<QuerySnapshot> _fetchData(){
+      return db.collection('Tasks').snapshots();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,7 +34,6 @@ class _taskPage extends State<TaskPage> {
       child: Column(
         children: <Widget>[
           Container(
-            margin: EdgeInsets.only(bottom: 30),
             padding: EdgeInsets.symmetric(horizontal: 15, vertical: 40),
             width: double.infinity,
             decoration: BoxDecoration(
@@ -35,8 +53,9 @@ class _taskPage extends State<TaskPage> {
                       ),
                       child: IconButton(
                         icon: Icon(Icons.arrow_back_ios_new_rounded,color: Theme.of(context).primaryColor,),
-                        onPressed: () {},
-                      ),
+                        onPressed: () {
+
+                        }),
                     ),
 
                     Container(
@@ -94,6 +113,68 @@ class _taskPage extends State<TaskPage> {
                   ),
                 )
               ],
+            ),
+          ),
+
+
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _fetchData(),
+                builder: (context,snapshot){
+                    if(snapshot.connectionState == ConnectionState.waiting){
+                      return Center(child:CircularProgressIndicator());
+                    }
+
+                    if(!snapshot.hasData){
+                      return Center(child: Text("No Data Found"));
+                    }
+
+                    final tasks = snapshot.data!.docs;
+
+                    return ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context,index){
+                          var task = tasks[index].data() as Map<String,dynamic>;
+                          return  Container(
+                            margin: EdgeInsets.only(bottom: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[100],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 2,
+                                  spreadRadius: 1,
+                                  offset: Offset(0,3)
+                                )
+                              ],
+                              borderRadius: BorderRadius.all(Radius.circular(15))
+                            ),
+                            child: ListTile(
+                              leading: Radio<String>(
+                                value: tasks[index].id,
+                                groupValue: _selectedTaskId,
+                                onChanged: (String? value){
+                                  setState(() {
+                                    _selectedTaskId = value;
+                                  });
+                                },
+                              ),
+                              title: Text(task['task'],style: TextStyle(fontSize: 18),),
+                              subtitle: Text(task['hour']+" : "+task['min']+" "+task['ampm']),
+                              trailing: IconButton(
+                                icon: Icon(Icons.delete_rounded),
+                                onPressed: (){
+                                  db.collection("Tasks").doc(tasks[index].id).delete();
+                                },
+                              ),
+                            ),
+                          );
+                      },
+                    );
+                },
+              ),
             ),
           ),
         ],
