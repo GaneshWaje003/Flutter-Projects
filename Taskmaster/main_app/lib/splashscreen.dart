@@ -17,22 +17,21 @@ class _splashscreenState extends State<splashscreen> {
   void _animateWidth() {
     setState(() {
       _width = 0.0;
-      print("Data updated width:$_width and height$_height ");
-      Future.delayed(Duration(seconds: 2), () {
+      Future.delayed(Duration(seconds: 3), () {
         _toMainPage();
       });
     });
   }
 
   void _toMainPage(){
-        Navigator.push(context,MaterialPageRoute(builder: (context) =>Mainpage() ));
+        Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) =>Mainpage() ));
   }
 
   @override
   void initState() {
     super.initState();
     // Delaying animation start by 1 second for demonstration
-    Future.delayed(Duration(seconds: 4), () {
+    Future.delayed(Duration(seconds: 1), () {
       _animateWidth();
     });
   }
@@ -62,7 +61,7 @@ class _splashscreenState extends State<splashscreen> {
               ),
 
               AnimatedContainer(
-                duration: Duration(seconds: 2),
+                duration: Duration(seconds: 4),
                 width: _width,
                 height: _height,
                 child: Image.asset(
