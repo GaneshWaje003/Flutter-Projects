@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:main_app/Login.dart';
+import 'package:main_app/settingScreens/language.dart';
 
 class Setting extends StatefulWidget {
   @override
@@ -14,10 +16,17 @@ class _SettingState extends State<Setting> {
 
   Color mainSettingColor = Color.fromRGBO(50, 50, 150, 0.1);
 
-  List<String> settingOptions = ['Theme', 'Language', 'About','Contact','Logout'];
+    // List<void Function()> functionForList = [themeFunc,languageFunc,aboutFunc,contactFunc,logoutFunc];
 
-  List<IconData> settingIcons = [Icons.sunny, Icons.language, Icons.account_circle_sharp ,Icons.phone_rounded,Icons.logout];
+  List<List<dynamic>> listData = [
+    [Icons.sunny,'Theme',()=>print('hello theme')],
+    [Icons.language,'Language',(context)=> Navigator.push(context,MaterialPageRoute(builder: (context)=>Login())   ) ],
+    [Icons.account_circle_sharp,'About',()=>print('hello theme')],
+    [Icons.phone_rounded,'Contact',()=>print('hello theme')],
+    [Icons.logout,'Logout',()=>print('hello theme')]
+  ];
 
+  var changeTheme = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,23 +97,56 @@ class _SettingState extends State<Setting> {
             ),
             Expanded(
               child: ListView.builder(
-                  itemCount: settingOptions.length,
+                  itemCount: listData.length,
                   itemBuilder: (context, index) {
+
+                    final item = listData[index];
+                    final itemLeading = item[0];
+                    final itemName = item[1];
+                    final itemFunctions = item[2];
+
                     return Container(
                       decoration: BoxDecoration(
                           border: Border(
                               bottom: BorderSide(color: Colors.black12))),
                       child: ListTile(
                         title: Text(
-                          settingOptions[index],
+                          itemName,
                           style: TextStyle(fontSize: 16),
                         ),
-                        leading: Icon(settingIcons[index]),
-                        trailing: Icon(Icons.chevron_right),
+                        leading: Icon(itemLeading),
+                        trailing: index == 0 ? Switch(
+                          value: changeTheme,
+                          onChanged:(bool value) {
+                            setState(() {
+                              changeTheme = ! changeTheme;
+                            });
+                          },
+                          thumbIcon: WidgetStateProperty
+                              .resolveWith<Icon?>(
+                                (Set<WidgetState> states) {
+                              if (states
+                                  .contains(WidgetState.selected)) {
+                                return Icon(Icons.dark_mode);
+                              }
+                              return Icon(Icons.light_mode,color: Colors.white,);
+                            },
+                          ),
+                          activeTrackColor:Theme.of(context).cardColor,
+                          inactiveTrackColor: Colors.white38,
+
+                        ) : Icon(Icons.chevron_right),
+
+                        onTap:itemFunctions ,
                       ),
                     );
                   }),
-            )
+            ),
+
+            Container(
+              child:Text('Taskmaster : 1.0',style: TextStyle(fontSize: 12,color: Colors.grey),),
+              margin: EdgeInsets.only(bottom: 20),
+            ),
           ],
         ),
       ),

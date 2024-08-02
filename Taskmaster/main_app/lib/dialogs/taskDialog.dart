@@ -7,16 +7,6 @@ class Taskdialog extends StatefulWidget {
   State<Taskdialog> createState() => _stateTaskDialogg();
 }
 
-class Task {
-  String task = "";
-  String ampm = "";
-  String hour = '';
-  String min = '';
-
-  Task({required this.task, required this.ampm, required this.hour, required this.min});
-
-}
-
 class _stateTaskDialogg extends State<Taskdialog> {
   String _selectedPeriod = 'AM';
   DatabaseMethods db = DatabaseMethods();
@@ -29,7 +19,7 @@ class _stateTaskDialogg extends State<Taskdialog> {
   void _showData() {
     Map<String, dynamic> taskInfo = {
       'task': _taskController.text.trim(),
-      'description': _descriptionController.text.trim(), // Include description in the task info
+      'description': _descriptionController.text.trim(),
       'hour': _hourController.text.trim(),
       'min': _minController.text.trim(),
       'ampm': _selectedPeriod,

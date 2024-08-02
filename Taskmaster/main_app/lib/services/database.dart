@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 class DatabaseMethods {
 
   FirebaseFirestore db = FirebaseFirestore.instance;
+    CollectionReference ref = FirebaseFirestore.instance.collection('Tasks');
 
   Future<bool> addUserDetails(Map<String, dynamic> empMap) async {
     try {
@@ -114,6 +115,25 @@ class DatabaseMethods {
     return false;
   }
 
+  late Query query;
+  late QuerySnapshot querySnapshot;
 
+  Future<bool> delTaskWithTitle(String taskTitle ) async{
+
+    try{
+
+    query = ref.where('task',isEqualTo: taskTitle);
+    querySnapshot = await query.get();
+    await querySnapshot.docs.first.reference.delete();
+      print('data delted success ');
+      return true;
+    }catch(e){
+      print('Error happen in delTaskWithTitle ${e}');
+    }
+
+
+
+    return false;
+  }
 
 }

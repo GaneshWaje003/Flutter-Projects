@@ -32,7 +32,6 @@ class _taskPage extends State<TaskPage> {
     });
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -40,7 +39,9 @@ class _taskPage extends State<TaskPage> {
     _fetchData().listen((snapshot) {
       setState(() {
         _tasks = snapshot.docs;
-        _switchStates = {for (var doc in snapshot.docs) doc.id:  _switchStates[doc.id] ?? false};
+        _switchStates = {
+          for (var doc in snapshot.docs) doc.id: _switchStates[doc.id] ?? false
+        };
       });
     });
   }
@@ -157,12 +158,15 @@ class _taskPage extends State<TaskPage> {
                       return ListView.builder(
                         itemCount: _tasks.length,
                         itemBuilder: (context, index) {
-                          var task =
-                              _tasks[index].data() as Map<String, dynamic>;
+                          var task = _tasks[index].data() as Map<String, dynamic>;
                           var taskTitle = task['task'] ?? 'No title';
                           var taskId = snapshot.data!.docs[index].id;
-                          var taskDescription = task['description'] ??
-                              'No description'; // Provide a default value if 'description' is null
+                          var hour = task['hour'] ?? '';
+                          var min = task['min'] ?? '';
+                          var ampm = task['ampm'] ?? '';
+                          var time = '$hour:$min $ampm';
+                          var isDone = task['completed'];
+                          var description = task['description'] ?? '';
                           return Container(
                             margin: EdgeInsets.only(bottom: 15),
                             decoration: BoxDecoration(
@@ -176,7 +180,8 @@ class _taskPage extends State<TaskPage> {
                                     MaterialPageRoute(
                                         builder: (context) => Taskinfo(
                                             title: taskTitle,
-                                            des: taskDescription)));
+                                            des: description,
+                                            time: time)));
                               },
                               child: Container(
                                 margin: EdgeInsets.only(left: 30),
@@ -193,7 +198,8 @@ class _taskPage extends State<TaskPage> {
                                   trailing: Container(
                                     margin: EdgeInsets.only(right: 20),
                                     child: Switch(
-                                      value: _switchStates[taskId] ?? false,
+                                      activeTrackColor: Colors.green,
+                                      value: isDone ?? false,
                                       thumbIcon: WidgetStateProperty
                                           .resolveWith<Icon?>(
                                         (Set<WidgetState> states) {
@@ -205,7 +211,7 @@ class _taskPage extends State<TaskPage> {
                                         },
                                       ),
                                       onChanged: (bool value) {
-                                          _toggleSwitch(taskId, value);
+                                        _toggleSwitch(taskId, value);
                                       },
                                     ),
                                   ),
