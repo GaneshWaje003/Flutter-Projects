@@ -1,6 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:main_app/Login.dart';
+import 'package:main_app/screensBottomNavbar/tasks.dart';
+import 'package:main_app/services/database.dart';
+import 'package:main_app/settingScreens/aobut.dart';
 import 'package:main_app/settingScreens/language.dart';
 
 class Setting extends StatefulWidget {
@@ -9,24 +13,52 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
-  LinearGradient myGradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [Colors.lightBlue, Colors.blue]);
-
-  Color mainSettingColor = Color.fromRGBO(50, 50, 150, 0.1);
-
-    // List<void Function()> functionForList = [themeFunc,languageFunc,aboutFunc,contactFunc,logoutFunc];
-
   List<List<dynamic>> listData = [
-    [Icons.sunny,'Theme',()=>print('hello theme')],
-    [Icons.language,'Language',(context)=> Navigator.push(context,MaterialPageRoute(builder: (context)=>Login())   ) ],
-    [Icons.account_circle_sharp,'About',()=>print('hello theme')],
-    [Icons.phone_rounded,'Contact',()=>print('hello theme')],
-    [Icons.logout,'Logout',()=>print('hello theme')]
+    [Icons.sunny, 'Theme', () => print('hello theme')],
+    [
+      Icons.language,
+      'Language',
+      (context) => Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Language())),
+    ],
+    [
+      Icons.account_circle_sharp,
+      'About',
+      (context) {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => About()));
+      }
+    ],
+    [Icons.phone_rounded, 'Contact', () => print('hello theme')],
+    [Icons.logout, 'Logout', () => print('hello theme')]
   ];
 
+  Color mainSettingColor = Color.fromRGBO(50, 50, 150, 0.1);
   var changeTheme = false;
+  DatabaseMethods db = DatabaseMethods();
+  late UserDataModel obj;
+
+  var username = '';
+  var userEmail = '';
+  var userPhotourl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  void _fetchUserData() async {
+    try {
+      Map<String, dynamic> data = await db.getUserData();
+      username = data['userName'] ?? 'loading ...';
+      userEmail = data['userEmail'] ?? '';
+      userPhotourl = data['useruserPhotourl'] ?? '';
+    } catch (e) {
+      print('error setting $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +78,7 @@ class _SettingState extends State<Setting> {
                 children: [
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    margin: EdgeInsets.only(right: 20,bottom: 20),
+                    margin: EdgeInsets.only(right: 20, bottom: 20),
                     width: double.infinity,
                     height: 150,
                     decoration: BoxDecoration(
@@ -70,25 +102,24 @@ class _SettingState extends State<Setting> {
                             ),
                           ),
                         ),
-
                         Container(
-                          margin:EdgeInsets.only(left: 40),
+                          margin: EdgeInsets.only(left: 40),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                child: Text("Username",style:TextStyle(fontSize: 16)),
+                                child: Text(username,
+                                    style: TextStyle(fontSize: 16)),
                               ),
-
                               Container(
                                 margin: EdgeInsets.only(top: 20),
-                                child: Text("Email123@gmail.com",style:TextStyle(fontSize: 16)),
+                                child: Text("Email123@gmail.com",
+                                    style: TextStyle(fontSize: 16)),
                               ),
                             ],
                           ),
                         )
-
                       ],
                     ),
                   ),
@@ -99,7 +130,6 @@ class _SettingState extends State<Setting> {
               child: ListView.builder(
                   itemCount: listData.length,
                   itemBuilder: (context, index) {
-
                     final item = listData[index];
                     final itemLeading = item[0];
                     final itemName = item[1];
@@ -110,41 +140,45 @@ class _SettingState extends State<Setting> {
                           border: Border(
                               bottom: BorderSide(color: Colors.black12))),
                       child: ListTile(
-                        title: Text(
-                          itemName,
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        leading: Icon(itemLeading),
-                        trailing: index == 0 ? Switch(
-                          value: changeTheme,
-                          onChanged:(bool value) {
-                            setState(() {
-                              changeTheme = ! changeTheme;
-                            });
-                          },
-                          thumbIcon: WidgetStateProperty
-                              .resolveWith<Icon?>(
-                                (Set<WidgetState> states) {
-                              if (states
-                                  .contains(WidgetState.selected)) {
-                                return Icon(Icons.dark_mode);
-                              }
-                              return Icon(Icons.light_mode,color: Colors.white,);
-                            },
+                          title: Text(
+                            itemName,
+                            style: TextStyle(fontSize: 16),
                           ),
-                          activeTrackColor:Theme.of(context).cardColor,
-                          inactiveTrackColor: Colors.white38,
-
-                        ) : Icon(Icons.chevron_right),
-
-                        onTap:itemFunctions ,
-                      ),
+                          leading: Icon(itemLeading),
+                          trailing: index == 0
+                              ? Switch(
+                                  value: changeTheme,
+                                  onChanged: (bool value) {
+                                    setState(() {
+                                      changeTheme = !changeTheme;
+                                    });
+                                  },
+                                  thumbIcon:
+                                      WidgetStateProperty.resolveWith<Icon?>(
+                                    (Set<WidgetState> states) {
+                                      if (states
+                                          .contains(WidgetState.selected)) {
+                                        return Icon(Icons.dark_mode);
+                                      }
+                                      return Icon(
+                                        Icons.light_mode,
+                                        color: Colors.white,
+                                      );
+                                    },
+                                  ),
+                                  activeTrackColor: Theme.of(context).cardColor,
+                                  inactiveTrackColor: Colors.white38,
+                                )
+                              : Icon(Icons.chevron_right),
+                          onTap: () => itemFunctions(context)),
                     );
                   }),
             ),
-
             Container(
-              child:Text('Taskmaster : 1.0',style: TextStyle(fontSize: 12,color: Colors.grey),),
+              child: Text(
+                'Taskmaster : 1.0',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
               margin: EdgeInsets.only(bottom: 20),
             ),
           ],
@@ -152,4 +186,20 @@ class _SettingState extends State<Setting> {
       ),
     );
   }
+}
+
+class UserDataModel {
+  final String? username;
+  final String? userEmail;
+  final String? userPhotourl;
+
+  UserDataModel(
+      {required this.username,
+      required this.userEmail,
+      required this.userPhotourl});
+
+  UserDataModel.empty()
+      : username = null,
+        userEmail = null,
+        userPhotourl = null;
 }

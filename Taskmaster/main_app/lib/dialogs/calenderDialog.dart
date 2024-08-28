@@ -26,7 +26,7 @@ class _CalenderDialogState extends State<CalenderDialog> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              color: Colors.blue[400],
+              color: Theme.of(context).cardColor,
             ),
             child: Center(
                 child: Text(
@@ -54,15 +54,15 @@ class _CalenderDialogState extends State<CalenderDialog> {
                   ),
             
                   Container(
+                    alignment: Alignment.bottomRight,
                     margin: EdgeInsets.only(top: 40),
-                    width: double.infinity,
                     child: ElevatedButton(
                         style:ButtonStyle(
-                          padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 15)),
-                          backgroundColor: WidgetStateProperty.all(Colors.blue[400]),
+                          padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 15 , horizontal: 30)),
+                          backgroundColor: WidgetStateProperty.all(Theme.of(context).cardColor),
                           shape:WidgetStateProperty.all(
                             RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(10))
+                              borderRadius: BorderRadius.all(Radius.circular(30))
                             )
                           )
                         ) ,

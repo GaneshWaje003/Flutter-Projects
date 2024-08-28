@@ -10,28 +10,54 @@ class Taskdialog extends StatefulWidget {
 class _stateTaskDialogg extends State<Taskdialog> {
   String _selectedPeriod = 'AM';
   DatabaseMethods db = DatabaseMethods();
+  final _formKey = GlobalKey<FormState>();
 
   TextEditingController _hourController = TextEditingController();
   TextEditingController _minController = TextEditingController();
   TextEditingController _taskController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController(); // Added controller for description
+  TextEditingController _descriptionController = TextEditingController();
 
-  void _showData() {
-    Map<String, dynamic> taskInfo = {
-      'task': _taskController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'hour': _hourController.text.trim(),
-      'min': _minController.text.trim(),
-      'ampm': _selectedPeriod,
-    };
+  String? _taskErrorMessage; // Error message for task
 
-    db.addTask(taskInfo); // adding the data to firebase
+  Future<void> _showData() async {
+    String title = _taskController.text.trim();
 
-    _hourController.clear();
-    _minController.clear();
-    _taskController.clear();
-    _descriptionController.clear(); // Clear description controller
-    Navigator.pop(context);
+    // Check for duplication
+    bool isDuplicate = await db.checkDuplication('Tasks', 'task', title);
+    if (isDuplicate) {
+      setState(() {
+        _taskErrorMessage = 'Task already exists';
+      });
+      return; // Exit the function to prevent adding the task
+    } else {
+      setState(() {
+        _taskErrorMessage = null; // Clear the error message if not a duplicate
+      });
+    }
+
+    // Validate the form fields
+    if (_formKey.currentState?.validate() ?? false) {
+      Map<String, dynamic> taskInfo = {
+        'task': _taskController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'hour': _hourController.text.trim(),
+        'min': _minController.text.trim(),
+        'ampm': _selectedPeriod,
+        'completed': false,
+      };
+
+      // Add the data to Firebase
+      await db.addTask(taskInfo);
+
+      // Clear the controllers
+      _hourController.clear();
+      _minController.clear();
+      _taskController.clear();
+      _descriptionController.clear();
+
+      // Close the bottom sheet
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -41,66 +67,79 @@ class _stateTaskDialogg extends State<Taskdialog> {
         children: [
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  topRight: Radius.circular(25)),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(25), topRight: Radius.circular(25)),
               color: Theme.of(context).cardColor,
             ),
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             width: double.infinity,
-            child: Center(
+            child: const Center(
                 child: Text(
                   "Add Task",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 )),
           ),
-
           Expanded(
             child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 30),
+              margin: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Container(
-                    child: TextField(
+                    child: TextFormField(
                       controller: _taskController,
                       decoration: InputDecoration(
-                          hintText: "Enter New Task",
-                          border: OutlineInputBorder(
-                              borderRadius:
-                              BorderRadius.all(Radius.circular(10))),
-                          prefixIcon: Icon(Icons.task)),
+                        hintText: "Enter New Task",
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10))),
+                        prefixIcon: Icon(Icons.task),
+                        errorText: _taskErrorMessage,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a value';
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   Container(
                     height: 100,
-                    margin: EdgeInsets.only(top: 10),
+                    margin: const EdgeInsets.only(top: 10),
                     child: Expanded(
-                      child: TextField(
-                        expands: true,
-                        minLines: null,
-                        maxLines: null,
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          hintText: "Enter Task Description",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                      child: Form(
+                        key: _formKey,
+                        child: TextFormField(
+                          expands: true,
+                          minLines: null,
+                          maxLines: null,
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            hintText: "Enter Task Description",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(10)),
+                            ),
+                            prefixIcon: Icon(Icons.description),
                           ),
-                          prefixIcon: Icon(Icons.description),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a value';
+                            }
+                            return null;
+                          },
                         ),
                       ),
                     ),
                   ),
-
                   Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       // color: Colors.blue
                     ),
                     child: Column(
                       children: [
                         Container(
-                          margin: EdgeInsets.only(bottom: 10),
-                          child: Align(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: const Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
                               "Select a time",
@@ -114,41 +153,51 @@ class _stateTaskDialogg extends State<Taskdialog> {
                           children: [
                             Container(
                               width: 70,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(Radius.circular(20)),
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                BorderRadius.all(Radius.circular(20)),
                               ),
-                              child: TextField(
+                              child: TextFormField(
                                 controller: _hourController,
                                 keyboardType: TextInputType.datetime,
                                 textAlign: TextAlign.center,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                     hintText: "HH",
-                                    border: OutlineInputBorder()),
+                                    border: OutlineInputBorder()
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a value';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                             Container(
                               width: 70,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                              decoration: const BoxDecoration(
+                                borderRadius:
+                                BorderRadius.all(Radius.circular(20)),
                               ),
                               child: TextField(
                                 controller: _minController,
                                 keyboardType: TextInputType.datetime,
                                 textAlign: TextAlign.center,
-                                decoration: InputDecoration(
+                                decoration: const InputDecoration(
                                     hintText: "MM",
                                     border: OutlineInputBorder()),
                               ),
                             ),
-
                             Align(
                               alignment: Alignment.topCenter,
                               child: Container(
                                   decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                      border: Border.all(color: Colors.black54)
-                                  ),
-                                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10)),
+                                      border:
+                                      Border.all(color: Colors.black54)),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 5),
                                   width: 70,
                                   child: DropdownButton<String>(
                                     value: _selectedPeriod,
@@ -176,11 +225,13 @@ class _stateTaskDialogg extends State<Taskdialog> {
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
                       style: ButtonStyle(
-                          padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13,horizontal: 30)),
-                          backgroundColor: MaterialStateProperty.all(Theme.of(context).cardColor)
-                      ),
+                          padding: MaterialStateProperty.all(
+                              const EdgeInsets.symmetric(
+                                  vertical: 13, horizontal: 30)),
+                          backgroundColor: MaterialStateProperty.all(
+                              Theme.of(context).cardColor)),
                       onPressed: _showData,
-                      child: Text(
+                      child: const Text(
                         "Add Task",
                         style: TextStyle(color: Colors.white),
                       ),
