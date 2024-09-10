@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:main_app/globalState.dart';
+import 'package:main_app/services/database.dart';
 
 class CalenderDialog extends StatefulWidget {
   @override
@@ -9,8 +11,19 @@ class CalenderDialog extends StatefulWidget {
 
 class _CalenderDialogState extends State<CalenderDialog> {
 
+  DatabaseMethods db = DatabaseMethods();
+
+  TextEditingController _taskInfoController = TextEditingController();
+
   void _onDateTaskButtonClicked(){
-        Navigator.of(context).pop();
+    DateTime selectedDate = GlobalState().selectedDate;
+    var taskTitle = _taskInfoController.text.trim();
+    Map<String,dynamic> taskData = {
+        'task' : taskTitle,
+        'date' : selectedDate.toIso8601String().substring(0,10),
+    };
+    db.uploadTask(taskData, "CalenderTasks");
+    Navigator.of(context).pop();
   }
 
   @override
@@ -43,7 +56,8 @@ class _CalenderDialogState extends State<CalenderDialog> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextField(
+                  TextFormField(
+                    controller: _taskInfoController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10))

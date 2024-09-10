@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:main_app/Login.dart';
-import 'package:main_app/main.dart';
 import 'package:main_app/mainPage.dart';
+import 'package:main_app/services/database.dart';
 
 class splashscreen extends StatefulWidget {
   @override
@@ -11,43 +11,38 @@ class splashscreen extends StatefulWidget {
 
 class _splashscreenState extends State<splashscreen> {
 
-  var _width = 300.0;
-  var _height = 300.0;
+  DatabaseMethods db = DatabaseMethods();
 
-  void _animateWidth() {
-    setState(() {
-      _width = 0.0;
-      Future.delayed(Duration(seconds: 3), () {
-        _toMainPage();
-      });
-    });
+  void _toPage(BuildContext context, Widget page) {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => page));
   }
 
-  void _toMainPage(){
-        Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) =>Mainpage() ));
+  void checkUserPresent() async {
+    var isUserPresent = await db.isUserPresent();
+    Future.delayed(Duration(seconds: 4), () {
+      if (isUserPresent) {
+        _toPage(context, Mainpage());
+      } else {
+        _toPage(context, Login());
+      }
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    // Delaying animation start by 1 second for demonstration
-    Future.delayed(Duration(seconds: 1), () {
-      _animateWidth();
-    });
+    checkUserPresent();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: Container(
-          decoration: BoxDecoration(
-            // Add decoration if needed
-          ),
+        child: Flexible(
           child: Column(
-
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
-
             children: <Widget>[
               Container(
                 margin: EdgeInsets.only(top: 200),
@@ -60,25 +55,25 @@ class _splashscreenState extends State<splashscreen> {
                 fit: BoxFit.cover,
               ),
 
-              AnimatedContainer(
-                duration: Duration(seconds: 4),
-                width: _width,
-                height: _height,
-                child: Image.asset(
-                  'assets/light_logo.png',
+
+              SizedBox(height: 100,),
+
+              Container(
+                alignment: Alignment.center,
+                // width: _width,
+                // height: _height,
+                child:Text('TaskMaster',style: TextStyle(fontSize:28,fontWeight:FontWeight.bold,letterSpacing: 1,height: 0),)
+
+                /*Image.asset(
+                  'assets/tm_logo.jpg',
                   fit: BoxFit.contain,
-                ),
+                ),*/
               ),
+              Container(child: Text('A Smart ToDo App',style: TextStyle(fontSize: 12,height: 0)),)
             ],
           ),
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: splashscreen(),
-  ));
 }

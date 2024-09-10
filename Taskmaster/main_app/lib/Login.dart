@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:main_app/mainPage.dart';
 import 'package:main_app/services/database.dart';
 import 'package:main_app/signup.dart';
 
@@ -25,14 +26,12 @@ class _loginstate extends State<Login> {
   Future<void> loginUser() async {
     if (_key.currentState!.validate()) {
       // If the form is valid, proceed with the login logic
+      var username = _usernameController.text.trim();
+      var pass =  _passwordController.text.trim();
 
-      Map<String, dynamic> user = {
-        "username": _usernameController.text.trim(),
-        "password": _passwordController.text.trim()
-      };
-
-      var isUserCreated =  db.addUserDetails(user);
-      if(await isUserCreated){
+      var isUserCreated = await db.loginUser(username,pass);
+      if (isUserCreated == "Login successful") {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Mainpage()));
         _usernameController.clear();
         _passwordController.clear();
       }
@@ -51,12 +50,11 @@ class _loginstate extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MainThemeColor,
+      backgroundColor: Theme.of(context).cardColor,
       body: Container(
           child: Column(
         children: [
           Container(
-            color: MainThemeColor,
             child: Column(
               children: [
                 Container(
@@ -74,6 +72,7 @@ class _loginstate extends State<Login> {
               ],
             ),
           ),
+
           Expanded(
             child: Container(
               // padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
@@ -192,7 +191,7 @@ class _loginstate extends State<Login> {
                               child: ElevatedButton(
                                   style: ButtonStyle(
                                     backgroundColor: MaterialStateProperty.all(
-                                        MainThemeColor),
+                                        Theme.of(context).cardColor),
                                     padding: MaterialStateProperty.all(
                                         EdgeInsets.symmetric(vertical: 10)),
                                     shape: MaterialStateProperty.all(
@@ -217,7 +216,7 @@ class _loginstate extends State<Login> {
                                     MaterialPageRoute(
                                         builder: (context) => Signup()));
                               },
-                              child: Text("New to Taskmaster ? Register"),
+                              child: Text("New to Taskmaster ? Register",style:TextStyle(color:Colors.blue)),
                             )),
                           ],
                         ),

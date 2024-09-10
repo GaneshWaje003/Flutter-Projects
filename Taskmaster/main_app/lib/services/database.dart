@@ -1,37 +1,48 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:main_app/screensBottomNavbar/setting.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+
 
 class DatabaseMethods {
   late Query query;
+  FirebaseAuth auth = FirebaseAuth.instance;
   late QuerySnapshot querySnapshot;
+  User? user = FirebaseAuth.instance.currentUser;
   FirebaseFirestore db = FirebaseFirestore.instance;
   late CollectionReference ref;
-  User? user = FirebaseAuth.instance.currentUser;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
-  Future<bool> addUserDetails(Map<String, dynamic> empMap) async {
+  Future<bool> isUserPresent() async{
+
+    if(user != null){
+      return true;
+    }
+    return false;
+  }
+
+  // Future<bool> signInWithGoogle() async{
+  //
+  //   auth.
+  //
+  //   return false;
+  // }
+
+  Future<bool> addUserDetails(String email , String password) async {
     try {
-      String userToCheck = empMap['email'];
-      bool isUserAlreadyRegistered =
-          await checkDuplication("users", "email", userToCheck);
+      
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(email: email, password: password);
+      print('User is created ${userCredential.user}');
+      return true;
 
-      if (isUserAlreadyRegistered) {
-        print(
-            "user already registered: ${empMap['email']}, ${empMap['username']}");
-        return false;
-      } else {
-        await db.collection("users").add(empMap);
-        print('Document added successfully');
-        return true;
-      }
-    } catch (e) {
-      print('Error adding document: $e');
+    } on FirebaseAuthException catch (e) {
+      print('Error Creating a user: $e');
       // Handle any errors here
     }
     return false;
   }
+
 
   Future<bool> checkDuplication(
       String collection, String attr, dynamic tocheckAttr) async {
@@ -54,28 +65,37 @@ class DatabaseMethods {
       return false; // Handle errors gracefully
     }
   }
-
-  Future<bool> loginUer(dynamic tocheckAttr) async {
+  Future<String> loginUser(String email, String password) async {
     try {
-      CollectionReference collectionRef = db.collection('users');
-      QuerySnapshot snapshot =
-          await collectionRef.where("username", isEqualTo: tocheckAttr).get();
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      if (snapshot.docs.isNotEmpty) {
-        print("User is present");
-        for (var doc in snapshot.docs) {
-          print(doc.id);
-        }
-        return true; // Indicates duplication found
+      if (userCredential.user != null) {
+        print("User is successfully logged in");
+        return "Login successful";
       } else {
-        print("User not found");
-        return false; // Indicates no duplication
+        print("Login failed");
+        return "Login failed";
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+        return 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+        return 'Wrong password provided for that user.';
+      } else {
+        print('Login failed: ${e.message}');
+        return 'Login failed: ${e.message}';
       }
     } catch (e) {
-      print('Error checking duplication: $e');
-      return false; // Handle errors gracefully
+      print('Error: $e');
+      rethrow; // Re-throw the exception for further handling
     }
   }
+
 
   Future<bool> addTask(Map<String, dynamic> taskData) async {
     try {
@@ -99,9 +119,16 @@ class DatabaseMethods {
   Future<bool> uploadTask(
       Map<String, dynamic> taskData, String collection) async {
     try {
-      db.collection(collection).add(taskData);
-      print('Task added sucessfully');
-      return true;
+      var checkAttr = taskData['task'];
+      var isDuplicate = await checkDuplication("CalenderTasks", 'task', checkAttr);
+
+      if(!isDuplicate){
+        db.collection(collection).add(taskData);
+        print('Task added sucessfully');
+        return true;
+      }else{
+        print('data is already present');
+      }
     } catch (e) {
       print('Data not send exception : $e');
     }
@@ -115,7 +142,7 @@ class DatabaseMethods {
   Future<bool> delTask(
       String givenId, void Function(String) onTaskDeleted) async {
     try {
-      await db.collection("TodayTasks").doc(givenId).delete();
+      await db.collection("DailyTasks").doc(givenId).delete();
       await db.collection("Tasks").doc(givenId).delete();
       print('Task deleted successfully');
       onTaskDeleted(givenId);
@@ -126,32 +153,24 @@ class DatabaseMethods {
     return false;
   }
 
-  Future<bool> delTaskWithTitle(String taskTitle) async {
+  Future<bool> delCalTask(
+      String givenId, void Function(String) onTaskDeleted) async {
     try {
-      ref = FirebaseFirestore.instance.collection('Tasks');
-      query = ref.where('task', isEqualTo: taskTitle);
-      querySnapshot = await query.get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        for (var doc in querySnapshot.docs) {
-          await doc.reference.delete();
-          print('Task deleted successfully: ${doc.id}');
-        }
+      await db.collection("CalenderTasks").doc(givenId).delete().then((_){
+        print('Task deleted successfully');
+        onTaskDeleted(givenId);
         return true;
-      } else {
-        print('No tasks found with the title: $taskTitle');
-        return false;
-      }
+      });
     } catch (e) {
-      print('Error in delTaskWithTitle: $e');
-      return false;
+      print('Data not deleted, exception : $e');
     }
+    return false;
   }
 
   Future<List<QueryDocumentSnapshot>> searchTasks(String taskTitle) async {
     try {
       QuerySnapshot snapshot = await db
-          .collection('tasks')
+          .collection('Tasks')
           .where('task', isEqualTo: taskTitle)
           .get();
 
@@ -173,6 +192,8 @@ class DatabaseMethods {
 
   Future<Map<String, dynamic>> getUserData() async {
     try {
+      User? user = FirebaseAuth.instance.currentUser;
+
       if (user == null) {
         print("User is null");
         return {
@@ -181,9 +202,9 @@ class DatabaseMethods {
           'userPhotourl': null
         };
       } else {
-        String? email = user!.email ?? 'Unknown';
-        String? userUrl = user!.photoURL;
-        String? userName = user!.displayName;
+        String? email = user.email ?? 'Unknown';
+        String? userUrl = user.photoURL;
+        String? userName = user.displayName;
 
         return {
           'userName': userName ?? 'Unknown',
@@ -193,12 +214,51 @@ class DatabaseMethods {
       }
     } catch (e) {
       print('Error: $e');
-      return {
-        'userName': 'Error',
-        'userEmail': 'Error',
-        'userPhotourl': null
-      };
+      return {'userName': 'Error', 'userEmail': 'Error', 'userPhotourl': null};
     }
   }
+
+  Future<List<QueryDocumentSnapshot>> fetchTaskData(String collection) async{
+    List<QueryDocumentSnapshot> dataList=[];
+
+    try{
+      QuerySnapshot querySnapshot = await db.collection(collection).get();
+      dataList = querySnapshot.docs;
+      print("Data fetched for "+collection);
+      return dataList;
+    }catch(e){
+      print("Exception while fetching data for "+collection);
+    }
+
+
+
+    return dataList;
+  }
+
+
+
+  Future<bool> logOut() async{
+      await FirebaseAuth.instance.signOut();
+      if(user == null){
+        print("user logged out");
+        return true;
+      }
+      return false;
+  }
+
+
+  Future<List<String>> getSpecificData(String collection , String attr) async{
+      List<String> fList = [];
+
+      QuerySnapshot snapshots = await db.collection(collection).get();
+
+      fList = snapshots.docs.map((doc){
+          var data = doc.data() as Map<String,dynamic>;
+          return data['${attr}'] as String;
+      }).toList();
+
+      return fList;
+  }
+
 
 }

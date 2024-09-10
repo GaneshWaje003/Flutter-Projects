@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:main_app/Login.dart';
@@ -13,34 +12,23 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
-  List<List<dynamic>> listData = [
-    [Icons.sunny, 'Theme', () => print('hello theme')],
-    [
-      Icons.language,
-      'Language',
-      (context) => Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Language())),
-    ],
-    [
-      Icons.account_circle_sharp,
-      'About',
-      (context) {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => About()));
-      }
-    ],
-    [Icons.phone_rounded, 'Contact', () => print('hello theme')],
-    [Icons.logout, 'Logout', () => print('hello theme')]
-  ];
+
+
+  DatabaseMethods db = DatabaseMethods();
+
+  void logOutuser(context) async {
+    var isLoggedOut = await db.logOut();
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Login()));
+  }
+
 
   Color mainSettingColor = Color.fromRGBO(50, 50, 150, 0.1);
   var changeTheme = false;
-  DatabaseMethods db = DatabaseMethods();
   late UserDataModel obj;
-
   var username = '';
   var userEmail = '';
   var userPhotourl = '';
+
 
   @override
   void initState() {
@@ -53,7 +41,7 @@ class _SettingState extends State<Setting> {
       Map<String, dynamic> data = await db.getUserData();
       username = data['userName'] ?? 'loading ...';
       userEmail = data['userEmail'] ?? '';
-      userPhotourl = data['useruserPhotourl'] ?? '';
+      userPhotourl = data['userPhotourl'] ?? '';
     } catch (e) {
       print('error setting $e');
     }
@@ -61,6 +49,27 @@ class _SettingState extends State<Setting> {
 
   @override
   Widget build(BuildContext context) {
+
+    List<List<dynamic>> listData = [
+      [Icons.sunny, 'Theme', () => print('hello theme')],
+      [
+        Icons.language,
+        'Language',
+            (context) => Navigator.push(
+            context, MaterialPageRoute(builder: (context) => Language())),
+      ],
+      [
+        Icons.account_circle_sharp,
+        'About',
+            (context) {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => About()));
+        }
+      ],
+      [Icons.phone_rounded, 'Contact', () => print('hello theme')],
+      [Icons.logout, 'Logout', (context) => logOutuser(context)]
+    ];
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -96,11 +105,17 @@ class _SettingState extends State<Setting> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: Image.asset(
-                              'assets/ronaldo_potrait.jpeg',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                            child:  userPhotourl != null && userPhotourl.isNotEmpty
+                          ? Image.network(
+                            userPhotourl,
+                            fit: BoxFit.cover,
+                          )
+                  : Image.asset(
+              'assets/ronaldo_potrait.jpeg',
+              fit: BoxFit.cover,
+            ),
+
+      ),
                         ),
                         Container(
                           margin: EdgeInsets.only(left: 40),
@@ -114,7 +129,7 @@ class _SettingState extends State<Setting> {
                               ),
                               Container(
                                 margin: EdgeInsets.only(top: 20),
-                                child: Text("Email123@gmail.com",
+                                child: Text(userEmail,
                                     style: TextStyle(fontSize: 16)),
                               ),
                             ],
@@ -186,6 +201,8 @@ class _SettingState extends State<Setting> {
       ),
     );
   }
+
+
 }
 
 class UserDataModel {

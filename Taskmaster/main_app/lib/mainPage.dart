@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:main_app/alarmPage.dart';
 import 'package:main_app/dialogs/calenderDialog.dart';
 import 'package:main_app/dialogs/taskDialog.dart';
 import 'package:main_app/dialogs/todayTaskDialog.dart';
@@ -73,7 +74,7 @@ class _MainPageState extends State<Mainpage> {
         ],
 
         currentIndex: _selectedIndex,
-        selectedItemColor: mainThemeColor,
+        selectedItemColor: Theme.of(context).cardColor,
         unselectedItemColor: Colors.grey,
         onTap: _onItemPress,
         type: BottomNavigationBarType.fixed,

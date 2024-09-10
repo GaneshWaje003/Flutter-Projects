@@ -28,16 +28,16 @@ class _SignupState extends State<Signup> {
 
   Future<void> _signUpUser() async{
     if(_key.currentState!.validate()){
-      Map<String,dynamic> user= {
-        'email': _emailController.text.trim(),
-        'username':_usernameController.text.trim(),
-        'password':_passwordController.text.trim()
-      };
-      var isUserCreated =  db.addUserDetails(user);
+
+      var email =_emailController.text.trim();
+      var password =  _passwordController.text.trim();
+
+    var isUserCreated = await db.addUserDetails(email,password);
       if(await isUserCreated){
         _emailController.clear();
         _usernameController.clear();
         _passwordController.clear();
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>Login()));
       }
 
     }

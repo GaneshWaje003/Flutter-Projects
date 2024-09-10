@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:main_app/TaskInfo.dart';
+import 'package:main_app/alarmData.dart';
+import 'package:main_app/notifactionService.dart';
+import 'package:main_app/services/database.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class TaskPage extends StatefulWidget {
@@ -11,12 +14,7 @@ class TaskPage extends StatefulWidget {
   State<TaskPage> createState() => _taskPage();
 }
 
-// ignore: camel_case_types
 class _taskPage extends State<TaskPage> {
-
-  // for flutter notification
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
   var showContainer = false;
   bool light1 = true;
 
@@ -24,23 +22,21 @@ class _taskPage extends State<TaskPage> {
   var totalTasks;
   var totalTasksDone = 0;
   var _percentage = 0.0;
-
+  var showNotification = false;
   Map<String, bool> _checkboxStates = {};
   FirebaseFirestore db = FirebaseFirestore.instance;
   List<QueryDocumentSnapshot> _tasks = [];
   List<String> _SelectedTasks = [];
-
+  List<AlarmData> _AlarmTime = [];
   var _selectedTaskId;
+  DateTime now = DateTime.now();
+  late NotifactionServices nf;
 
   @override
   void initState() {
     super.initState();
-
-    // setting alarms variable
-    final AndroidInitializationSettings androidInitializationSettings = AndroidInitializationSettings('app_icon');
-    final InitializationSettings initializationSettings  = InitializationSettings(android: androidInitializationSettings);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
+    nf = NotifactionServices();
+    _startAlarmChecking();
     // Subscribe to the stream returned by _fetchData() and update the _tasks list
     _fetchData().listen((snapshot) {
       setState(() {
@@ -52,6 +48,19 @@ class _taskPage extends State<TaskPage> {
             .length;
         _percentage = _tasks.isNotEmpty ? totalTasksDone / totalTasks : 0.0;
       });
+    });
+  }
+
+  void _startAlarmChecking() {
+    Timer.periodic(Duration(seconds: 60), (timer) {
+      now = DateTime.now();
+      for (var alarmTime in _AlarmTime) {
+        if (alarmTime.alarmTime.hour == now.hour &&
+            alarmTime.alarmTime.minute == now.minute) {
+          nf.scheduleAlarm(alarmTime.alarmTime, alarmTime.taskTitle,
+              alarmTime.taskDescription);
+        }
+      }
     });
   }
 
@@ -92,26 +101,6 @@ class _taskPage extends State<TaskPage> {
   Stream<QuerySnapshot> _fetchData() {
     return db.collection('Tasks').snapshots();
   }
-
-  //
-  // void sheduleAlarm() async{
-  //   await flutterLocalNotificationsPlugin.zonedSchedule(
-  //     0,
-  //     'Alarm',
-  //     'It\'s time!',
-  //     tz.TZDateTime.from(alarmTime, tz.local),
-  //     const NotificationDetails(
-  //       android: AndroidNotificationDetails(
-  //         'your_channel_id',
-  //         'your_channel_name',
-  //         importance: Importance.max,
-  //         priority: Priority.high,
-  //       ),
-  //     ),
-  //     androidAllowWhileIdle: true,
-  //     matchDateTimeComponents: DateTimeComponents.time,
-  //   );
-  // }
 
   final ScrollController _scrollController = ScrollController();
 
@@ -213,9 +202,18 @@ class _taskPage extends State<TaskPage> {
                         final min = task['min'] ?? '';
                         final ampm = task['ampm'] ?? '';
                         final time = '$hour:$min $ampm';
-                        final boolState = task['completed'] is bool ? task['completed'] : (task['completed'] == 'true');
+                        final boolState = task['completed'] is bool
+                            ? task['completed']
+                            : (task['completed'] == 'true');
                         final description = task['description'] ?? '';
                         final isSelected = _SelectedTasks.contains(taskId);
+                        final hourInt = int.tryParse(hour)??0;
+                        final minInt = int.tryParse(min)??0;
+                        _AlarmTime.add(AlarmData(
+                            alarmTime:
+                            DateTime(now.year,now.month,now.day,hourInt , minInt ),
+                            taskTitle: taskTitle,
+                            taskDescription: description));
 
                         return TaskItem(
                             task: task,
@@ -225,7 +223,8 @@ class _taskPage extends State<TaskPage> {
                             onToggleCheckbox: toggleCheckbox,
                             onLongPress: () {
                               setState(() {
-                                showContainer = !showContainer; // Only toggle the visibility
+                                showContainer =
+                                    !showContainer; // Only toggle the visibility
                               });
                             },
                             onTap: () {
@@ -233,14 +232,13 @@ class _taskPage extends State<TaskPage> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => Taskinfo(
-                                            id: taskId,
-                                            title: taskTitle,
-                                            des: description,
-                                            hour: hour,
-                                            min: min,
-                                            ampm: ampm,
-                                            completed: boolState
-                                          )));
+                                          id: taskId,
+                                          title: taskTitle,
+                                          des: description,
+                                          hour: hour ,
+                                          min: min ,
+                                          ampm: ampm,
+                                          completed: boolState)));
                             });
                       },
                     );
@@ -280,11 +278,10 @@ class TaskItem extends StatefulWidget {
 }
 
 class _TaskItem extends State<TaskItem> {
-
   @override
   Widget build(BuildContext context) {
-     final Color listColor = Color(0xFFEEEEFD);
-     final Color popUpColor = Color(0xFFEEEDFD);
+    final Color listColor = Color(0xFFEEEEFD);
+    final Color popUpColor = Color(0xFFEEEDFD);
     var _isSelected = widget.isSelected;
     final taskId = widget.taskId;
     final taskTitle = widget.task['task'] ?? 'no title';
@@ -292,11 +289,62 @@ class _TaskItem extends State<TaskItem> {
     final hour = widget.task['hour'] ?? '0';
     final min = widget.task['min'] ?? '0';
     final ampm = widget.task['ampm'] ?? '0';
-    final boolState = widget.task['completed'] is bool ? widget.task['completed'] as bool : widget.task['completed'] == 'true';
+    final boolState = widget.task['completed'] is bool
+        ? widget.task['completed'] as bool
+        : widget.task['completed'] == 'true';
 
+    DatabaseMethods db = DatabaseMethods();
+    TextStyle whiteStyle = TextStyle(color: Colors.white);
+    TextStyle darkStyle = TextStyle(color: Theme.of(context).cardColor);
+
+    void onTaskDeleted(taskId){
+
+      print('Task with id $taskId is deleted permantly');
+
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const TaskPage()));
+
+    }
+
+    void _showDialog(BuildContext context) async{
+      bool? result  = await showDialog(
+          context: context,
+          builder: (BuildContext context){
+            return AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              title: Text('Cofirm Action',style: whiteStyle),
+              content:Text('You want to delete Task permanantly',style: whiteStyle),
+              actions: [
+                TextButton(
+                  child: Text('No',style: whiteStyle),
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Return false
+                  },
+                ),
+                ElevatedButton(
+                  child: Text('Yes',style: darkStyle),
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Return true
+                  },
+                ),
+              ],
+            );
+          });
+
+      if(result == true){
+        bool isDeleted = await db.delTask(taskId, onTaskDeleted);
+      }
+
+    }
+
+    void _onMenuItemSelected(context,value){
+        switch(value){
+          case 'delete':
+            _showDialog(context);
+        }
+    }
 
     return Container(
-
       key: ValueKey(taskId),
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 15),
@@ -343,22 +391,24 @@ class _TaskItem extends State<TaskItem> {
                           widget.onToggleSwitch(taskId, value);
                         },
                       ),
-
                       PopupMenuButton<String>(
+                        onSelected: (String value) {
+                          _onMenuItemSelected(context, value);
+                        },
                         color: popUpColor,
-                          padding: EdgeInsets.all(0),
-                          icon:Icon(Icons.more_vert),
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                              const PopupMenuItem(child: Text('select')),
-                              const PopupMenuItem(child: Text('delete')),
-                              const PopupMenuItem(child: Text('update')),
-                          ],
+                        padding: EdgeInsets.all(0),
+                        icon: Icon(Icons.more_vert),
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                          const PopupMenuItem(value: 'select', child: Text('select')),
+                          const PopupMenuItem(value: 'delete',child: Text('delete')),
+                          const PopupMenuItem(value: 'update',child: Text('update')),
+                        ],
                       ),
-
                     ],
                   ),
                 ),
-                onLongPress: ()=> setState(() {
+                onLongPress: () => setState(() {
                   _isSelected = !_isSelected; // Toggle selection on long press
                 }),
                 onTap: widget.onTap,

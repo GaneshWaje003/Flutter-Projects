@@ -37,6 +37,7 @@ class _TaskInfoState extends State<Taskinfo> {
    List<String> _historyString =[];
   DatabaseMethods db = DatabaseMethods();
 
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +69,7 @@ class _TaskInfoState extends State<Taskinfo> {
     };
 
     db.updateData(widget.id, taskData);
+    Navigator.of(context).pop();
   }
 
 
@@ -93,6 +95,51 @@ class _TaskInfoState extends State<Taskinfo> {
       }
     }
 
+    void onTaskDeleted(taskId){
+
+        print('Task with id $taskId is deleted permantly');
+
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const TaskPage()));
+
+    }
+
+
+
+    TextStyle whiteStyle = TextStyle(color: Colors.white);
+    TextStyle darkStyle = TextStyle(color: Theme.of(context).cardColor);
+
+    void _showDialog(BuildContext context) async{
+          bool? result  = await showDialog(
+              context: context,
+              builder: (BuildContext context){
+                return AlertDialog(
+                  backgroundColor: Theme.of(context).cardColor,
+                    title: Text('Cofirm Action',style: whiteStyle),
+                    content:Text('You want to delete Task permanantly',style: whiteStyle),
+                    actions: [
+                      TextButton(
+                        child: Text('No',style: whiteStyle),
+                        onPressed: () {
+                          Navigator.of(context).pop(false); // Return false
+                        },
+                      ),
+                      ElevatedButton(
+                        child: Text('Yes',style: darkStyle),
+                        onPressed: () {
+                          Navigator.of(context).pop(true); // Return true
+                        },
+                      ),
+                    ],
+                );
+          });
+
+          if(result == true){
+            bool isDeleted = await db.delTask(taskId, onTaskDeleted);
+          }
+
+    }
+
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
@@ -102,16 +149,7 @@ class _TaskInfoState extends State<Taskinfo> {
         ),
         actions: [
           IconButton(
-            onPressed: () async {
-              bool isDeleted = await db.delTaskWithTitle(widget.title);
-              if (isDeleted) {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => const TaskPage()));
-              } else {
-                // Optionally show an error message
-                print('Failed to delete task');
-              }
-            },
+            onPressed: ()=>_showDialog(context),
             icon: const Icon(Icons.delete_rounded),
           ),
           IconButton(
