@@ -40,9 +40,24 @@ class _calenderPage extends State<CalenderPage> {
   void _fetchAttr(){
 
   }
-
   void changePage(String taskId ,String taskTitle, String taskDate) {
-    Navigator.push(context,MaterialPageRoute(builder: (context)=>CalenderInfo(taskId: taskId,task: taskTitle, dateTime: taskDate)));
+
+    TextStyle whiteStyle = TextStyle(color: Colors.white);
+    TextStyle darkStyle = TextStyle(color: Theme.of(context).cardColor);
+
+    // Navigator.push(context,MaterialPageRoute(builder: (context)=>CalenderInfo(taskId: taskId,task: taskTitle, dateTime: taskDate)));
+
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        title: Text('daywise tasks',style: whiteStyle,),
+        content:Text(taskTitle,style: whiteStyle,) ,
+        backgroundColor: Theme.of(context).cardColor,
+        actions: [
+          TextButton(onPressed: (){}, child: Text('Yes',style: whiteStyle,)),
+          ElevatedButton(onPressed: (){}, child: Text('No',style: darkStyle,))
+        ],
+      );
+    });
   }
 
 

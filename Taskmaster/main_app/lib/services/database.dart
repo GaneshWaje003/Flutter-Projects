@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
-
+import 'package:main_app/alarmData.dart';
 
 class DatabaseMethods {
   late Query query;
@@ -12,11 +12,10 @@ class DatabaseMethods {
   FirebaseFirestore db = FirebaseFirestore.instance;
   late CollectionReference ref;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
-  Future<bool> isUserPresent() async{
-
-    if(user != null){
+  Future<bool> isUserPresent() async {
+    if (user != null) {
       return true;
     }
     return false;
@@ -29,20 +28,18 @@ class DatabaseMethods {
   //   return false;
   // }
 
-  Future<bool> addUserDetails(String email , String password) async {
+  Future<bool> addUserDetails(String email, String password) async {
     try {
-      
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+          email: email, password: password);
       print('User is created ${userCredential.user}');
       return true;
-
     } on FirebaseAuthException catch (e) {
       print('Error Creating a user: $e');
       // Handle any errors here
     }
     return false;
   }
-
 
   Future<bool> checkDuplication(
       String collection, String attr, dynamic tocheckAttr) async {
@@ -65,9 +62,11 @@ class DatabaseMethods {
       return false; // Handle errors gracefully
     }
   }
+
   Future<String> loginUser(String email, String password) async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -96,7 +95,6 @@ class DatabaseMethods {
     }
   }
 
-
   Future<bool> addTask(Map<String, dynamic> taskData) async {
     try {
       var taskToCheck = taskData['task'];
@@ -120,13 +118,14 @@ class DatabaseMethods {
       Map<String, dynamic> taskData, String collection) async {
     try {
       var checkAttr = taskData['task'];
-      var isDuplicate = await checkDuplication("CalenderTasks", 'task', checkAttr);
+      var isDuplicate =
+          await checkDuplication("CalenderTasks", 'task', checkAttr);
 
-      if(!isDuplicate){
+      if (!isDuplicate) {
         db.collection(collection).add(taskData);
         print('Task added sucessfully');
         return true;
-      }else{
+      } else {
         print('data is already present');
       }
     } catch (e) {
@@ -156,7 +155,7 @@ class DatabaseMethods {
   Future<bool> delCalTask(
       String givenId, void Function(String) onTaskDeleted) async {
     try {
-      await db.collection("CalenderTasks").doc(givenId).delete().then((_){
+      await db.collection("CalenderTasks").doc(givenId).delete().then((_) {
         print('Task deleted successfully');
         onTaskDeleted(givenId);
         return true;
@@ -218,47 +217,80 @@ class DatabaseMethods {
     }
   }
 
-  Future<List<QueryDocumentSnapshot>> fetchTaskData(String collection) async{
-    List<QueryDocumentSnapshot> dataList=[];
+  Future<List<QueryDocumentSnapshot>> fetchTaskData(String collection) async {
+    List<QueryDocumentSnapshot> dataList = [];
 
-    try{
+    try {
       QuerySnapshot querySnapshot = await db.collection(collection).get();
       dataList = querySnapshot.docs;
-      print("Data fetched for "+collection);
+      print("Data fetched for " + collection);
       return dataList;
-    }catch(e){
-      print("Exception while fetching data for "+collection);
+    } catch (e) {
+      print("Exception while fetching data for " + collection);
     }
-
-
 
     return dataList;
   }
 
-
-
-  Future<bool> logOut() async{
-      await FirebaseAuth.instance.signOut();
-      if(user == null){
-        print("user logged out");
-        return true;
-      }
-      return false;
+  Future<bool> logOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (user == null) {
+      print("user logged out");
+      return true;
+    }
+    return false;
   }
 
+  Future<List<String>> getSpecificData(String collection, String attr) async {
+    List<String> fList = [];
 
-  Future<List<String>> getSpecificData(String collection , String attr) async{
-      List<String> fList = [];
+    QuerySnapshot snapshots = await db.collection(collection).get();
 
-      QuerySnapshot snapshots = await db.collection(collection).get();
+    fList = snapshots.docs.map((doc) {
+      var data = doc.data() as Map<String, dynamic>;
+      return data['${attr}'] as String;
+    }).toList();
 
-      fList = snapshots.docs.map((doc){
-          var data = doc.data() as Map<String,dynamic>;
-          return data['${attr}'] as String;
+    return fList;
+  }
+
+  Future<List<AlarmData>> getAlarmData() async {
+    List<AlarmData> flist = [];
+
+    try {
+      querySnapshot = await db.collection('Tasks').get();
+
+      flist = querySnapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+
+        var hour = int.tryParse(data['hour']!.toString()) ?? 0;
+        final minute = int.tryParse(data['min']!.toString()) ?? 0;
+        final task = data['task']?.toString() ?? 'No Task'; // Default if missing
+        final description = data['description']?.toString() ?? ''; // Empty string if missing
+
+        final ampm = data['ampm']?.toString().toUpperCase();
+
+        if (ampm == 'AM' && hour == 12) {
+          hour = 0;
+        } else if (ampm == 'PM' && hour < 12) {
+          hour += 12; // Adjust for hours after noon
+        }
+
+        final alarmTime = TimeOfDay(hour: hour, minute: minute);
+        final today = DateTime.now();
+        final alarmDate = DateTime(today.year, today.month, today.day,
+            alarmTime.hour, alarmTime.minute);
+        print('alarm data : ${alarmDate}');
+
+        return AlarmData(
+            alarmTime: alarmDate,
+            taskTitle: task,
+            taskDescription: description);
       }).toList();
-
-      return fList;
+      flist.removeWhere((element) => element == null);
+    } catch (e) {
+      print('getAlarmData : ${e}');
+    }
+    return flist;
   }
-
-
 }

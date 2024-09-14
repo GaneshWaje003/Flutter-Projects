@@ -12,161 +12,80 @@ class _todayTaskState extends State<TodayTaskDialog> {
     String _selectedPeriod = 'AM';
     DatabaseMethods db = DatabaseMethods();
 
-    TextEditingController _hourController = TextEditingController();
-    TextEditingController _minController = TextEditingController();
     TextEditingController _taskController = TextEditingController();
+    TextEditingController _descriptionController = TextEditingController();
 
-    void _showData(){
+    void _addNotes(){
       Map <String,dynamic> taskInfo = {
         'task':_taskController.text.trim(),
-        'hour':_hourController.text.trim(),
-        'min' :_minController.text.trim(),
-        'ampm':_selectedPeriod,
+        'description':_descriptionController.text.trim()
       };
 
-      db.uploadTask(taskInfo,'TodayTasks');
-      _hourController.clear();
-      _minController.clear();
+      db.uploadTask(taskInfo,'Notes');
+      _descriptionController.clear();
+      _taskController.clear();
       Navigator.pop(context);
     }
     @override
     Widget build(BuildContext context) {
-      return Container(
-        // height: 400,
-        child: Center(
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25)),
-                  color: Theme
-                      .of(context)
-                      .cardColor,
-                ),
-                padding: EdgeInsets.symmetric(vertical: 10),
-                width: double.infinity,
-                child: Center(
-                    child: Text(
-                      "Add Task ",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                    )),
-              ),
-              Flexible(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 30),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Container(
-                        child: TextField(
-                          controller: _taskController,
-                          decoration: InputDecoration(
-                              hintText: "Enter New Tasks",
-                              border: OutlineInputBorder(
-                                  borderRadius:
-                                  BorderRadius.all(Radius.circular(10))),
-                              prefixIcon: Icon(Icons.task)),
-                        ),
-                      ),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          // color: Colors.blue
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  "Select a time ",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 70,
-                                  child: TextField(
-                                    controller: _hourController,
-                                    keyboardType: TextInputType.datetime,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                        hintText: "HH",
-                                        border: OutlineInputBorder()),
-                                  ),
-                                ),
-
-                                Container(
-                                  width: 70,
-                                  child: TextField(
-                                    controller: _minController,
-                                    keyboardType: TextInputType.datetime,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                        hintText: "MM",
-                                        border: OutlineInputBorder()),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Container(
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(5)),
-                                          border: Border.all(
-                                              color: Colors.black54)
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 5, horizontal: 5),
-                                      width: 70,
-                                      child: DropdownButton<String>(
-                                        value: _selectedPeriod,
-                                        onChanged: (String? newValue) {
-                                          setState(() {
-                                            _selectedPeriod = newValue!;
-                                          });
-                                        },
-                                        items: <String>['AM', 'PM']
-                                            .map<DropdownMenuItem<String>>(
-                                                (String value) {
-                                              return DropdownMenuItem<String>(
-                                                value: value,
-                                                child: Text(value),
-                                              );
-                                            }).toList(),
-                                      )),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(Theme
-                                  .of(context)
-                                  .cardColor)
-                          ),
-                          onPressed: _showData,
-                          child: Text(
-                            "add task",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('add note'),
+          elevation: 1,
+          automaticallyImplyLeading: true,
+          actions: [
+            IconButton(onPressed: ()=>_addNotes(), icon: Icon(Icons.check))
+          ],
+        ),
+        body: SafeArea(
+          child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 20,horizontal: 20),
+            // height: 400,
+            child: Column(
+              children: [
+                Container(
+                // color: Colors.grey,
+                  padding: EdgeInsets.only(top: 10 , bottom: 3),
+                  child: TextField(
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    autofocus: true,
+                    maxLength: 32,
+                    controller: _taskController,
+                    decoration: InputDecoration(
+                    counterText: '',
+                      border: InputBorder.none,
+                        hintText: "title",
+                        // prefixIcon: Icon(Icons.task)
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: Text('32 chars only title',style: TextStyle(color: Colors.grey),),
+                ),
+                Expanded(
+                // color: Colors.grey,
+                //   padding: EdgeInsets.symmetric(vertical: 10),
+                  child: TextField(
+                    expands: true,
+                    maxLines: null,
+                    minLines: null,
+                    style: TextStyle(
+                      fontSize: 16
+                    ),
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                        hintText: "description",
+                        // prefixIcon: Icon(Icons.task)
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );

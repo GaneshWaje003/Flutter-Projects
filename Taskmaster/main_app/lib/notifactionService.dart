@@ -21,18 +21,19 @@ class NotifactionServices{
 
     DateTime today = DateTime.now();
     DateTime alarmDate = DateTime(today.year,today.month,today.day,dates.hour,dates.minute);
+    int alarmId = alarmDate.hashCode;
 
     AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-        '0',
-        'your_channel',
+        'task_alarm_channel',
+        'task_alarm',
         channelDescription: desc,
         importance: Importance.max,
         priority: Priority.high,
-        showWhen: false
+        showWhen: true
     );
 
     NotificationDetails platFormDetails = NotificationDetails(android: androidNotificationDetails);
-    flutterLocalNotificationsPlugin.zonedSchedule(0,task, desc, tz.TZDateTime.from(alarmDate, tz.local),platFormDetails , androidAllowWhileIdle: true, uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
+    flutterLocalNotificationsPlugin.zonedSchedule(alarmId,task, desc, tz.TZDateTime.from(alarmDate, tz.local),platFormDetails , androidAllowWhileIdle: true, uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
 
   }
 }

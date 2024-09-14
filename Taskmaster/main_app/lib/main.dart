@@ -2,11 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:main_app/splashscreen.dart';
 import 'package:main_app/firebase_options.dart';
 import 'package:workmanager/src/workmanager.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:timezone/data/latest.dart' as tz;
+
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin
+= FlutterLocalNotificationsPlugin();
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -37,6 +41,7 @@ void callbackDispatcher() {
     return Future.value(true);
   });
 }
+
 
 void main() async {
 

@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:main_app/services/database.dart';
 
-class TodayTask extends StatefulWidget {
+class Notes extends StatefulWidget {
   @override
-  State<TodayTask> createState() => _TodayTaskState();
+  State<Notes> createState() => _TodayTaskState();
 }
 
-class _TodayTaskState extends State<TodayTask> {
+class _TodayTaskState extends State<Notes> {
 
   List<QueryDocumentSnapshot> todayTasks = [];
   DatabaseMethods firebaseMethods = DatabaseMethods();
@@ -36,7 +36,7 @@ class _TodayTaskState extends State<TodayTask> {
                 child: Container(
                   padding: EdgeInsets.symmetric(vertical: 30,horizontal: 10),
                     child: StreamBuilder<QuerySnapshot>(
-                  stream: firebaseMethods.fetchData('TodayTasks'),
+                  stream: firebaseMethods.fetchData('Notes'),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return (Center(
@@ -92,6 +92,7 @@ class _TodayTaskState extends State<TodayTask> {
                                   }
                                 },
                               ),
+                              // onTap: NotesInfo(task),
                             ),
                           );
                         });

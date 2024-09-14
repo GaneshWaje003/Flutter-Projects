@@ -22,7 +22,7 @@ class _MainPageState extends State<Mainpage> {
   final List<Widget> _screens = [
     TaskPage(),
     CalenderPage(),
-    TodayTask(),
+    Notes(),
     Setting(),
   ];
 
@@ -39,7 +39,8 @@ class _MainPageState extends State<Mainpage> {
     }else if(_selectedIndex == 1){
       showModalBottomSheet(context: context, builder: (context)=>CalenderDialog());
     }else if(_selectedIndex == 2){
-      showModalBottomSheet(context: context, builder: (context)=> TodayTaskDialog());
+      // Navigator.push(context: context, builder: (context)=> TodayTaskDialog());
+      Navigator.push(context, MaterialPageRoute(builder: (context)=>TodayTaskDialog()));
     }else{
       showModalBottomSheet(context: context, builder: (context)=> Taskdialog());
     }
@@ -65,7 +66,7 @@ class _MainPageState extends State<Mainpage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_alert_rounded),
-            label: "Today",
+            label: "Notes",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
