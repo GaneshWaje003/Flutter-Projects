@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:main_app/alarmPage.dart';
 import 'package:main_app/dialogs/calenderDialog.dart';
 import 'package:main_app/dialogs/taskDialog.dart';
-import 'package:main_app/dialogs/todayTaskDialog.dart';
+import 'package:main_app/dialogs/notesDialog.dart';
 import 'package:main_app/screensBottomNavbar/calender.dart';
 import 'package:main_app/screensBottomNavbar/setting.dart';
 import 'package:main_app/screensBottomNavbar/tasks.dart';
-import 'package:main_app/screensBottomNavbar/todayTask.dart';
+import 'package:main_app/screensBottomNavbar/notes.dart';
 
 class Mainpage extends StatefulWidget {
   @override
@@ -28,7 +28,7 @@ class _MainPageState extends State<Mainpage> {
 
   void _onItemPress(int index) {
     setState(() {
-      _selectedIndex = index;
+      _selectedIndex = index; 
       print('Selected index: $index');
     });
   }

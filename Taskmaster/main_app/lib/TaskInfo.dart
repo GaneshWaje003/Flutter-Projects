@@ -33,10 +33,9 @@ class _TaskInfoState extends State<Taskinfo> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late TextEditingController _timeController;
-   List<String> _redoString =[];
-   List<String> _historyString =[];
+  List<String> _redoString = [];
+  List<String> _historyString = [];
   DatabaseMethods db = DatabaseMethods();
-
 
   @override
   void initState() {
@@ -68,97 +67,88 @@ class _TaskInfoState extends State<Taskinfo> {
       'completed': false,
     };
 
-    db.updateData(widget.id, taskData);
+    db.updateData(widget.id,'Tasks' ,taskData);
     Navigator.of(context).pop();
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    void undoText(){
-      if(_historyString.isNotEmpty){
-
-      setState(() {
-        _titleController.text = _historyString.removeLast();
-        print(_historyString);
-      });
+    void undoText() {
+      if (_historyString.isNotEmpty) {
+        setState(() {
+          _titleController.text = _historyString.removeLast();
+          print(_historyString);
+        });
       }
     }
 
-    void redoText(){
-      if(_redoString.isNotEmpty){
-      setState(() {
-        _historyString.add(_redoString.removeLast());
-        _titleController.text=_historyString.last;
-      });
+    void redoText() {
+      if (_redoString.isNotEmpty) {
+        setState(() {
+          _historyString.add(_redoString.removeLast());
+          _titleController.text = _historyString.last;
+        });
       }
     }
 
-    void onTaskDeleted(taskId){
+    void onTaskDeleted(taskId) {
+      print('Task with id $taskId is deleted permantly');
 
-        print('Task with id $taskId is deleted permantly');
-
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => const TaskPage()));
-
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const TaskPage()));
     }
-
-
 
     TextStyle whiteStyle = TextStyle(color: Colors.white);
     TextStyle darkStyle = TextStyle(color: Theme.of(context).cardColor);
 
-    void _showDialog(BuildContext context) async{
-          bool? result  = await showDialog(
-              context: context,
-              builder: (BuildContext context){
-                return AlertDialog(
-                  backgroundColor: Theme.of(context).cardColor,
-                    title: Text('Cofirm Action',style: whiteStyle),
-                    content:Text('You want to delete Task permanantly',style: whiteStyle),
-                    actions: [
-                      TextButton(
-                        child: Text('No',style: whiteStyle),
-                        onPressed: () {
-                          Navigator.of(context).pop(false); // Return false
-                        },
-                      ),
-                      ElevatedButton(
-                        child: Text('Yes',style: darkStyle),
-                        onPressed: () {
-                          Navigator.of(context).pop(true); // Return true
-                        },
-                      ),
-                    ],
-                );
+    void _showDialog(BuildContext context) async {
+      bool? result = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              title: Text('Cofirm Action', style: whiteStyle),
+              content: Text('You want to delete Task permanantly',
+                  style: whiteStyle),
+              actions: [
+                TextButton(
+                  child: Text('No', style: whiteStyle),
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Return false
+                  },
+                ),
+                ElevatedButton(
+                  child: Text('Yes', style: darkStyle),
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Return true
+                  },
+                ),
+              ],
+            );
           });
 
-          if(result == true){
-            bool isDeleted = await db.delTask(taskId, onTaskDeleted);
-          }
-
+      if (result == true) {
+        bool isDeleted = await db.delTask(taskId, 'Tasks', onTaskDeleted);
+      }
     }
 
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
         backgroundColor: Theme.of(context).cardColor,
-        iconTheme: IconThemeData(
-          color: Colors.white70
-        ),
+        iconTheme: IconThemeData(color: Colors.white70),
         actions: [
           IconButton(
-            onPressed: ()=>_showDialog(context),
+            onPressed: () => _showDialog(context),
             icon: const Icon(Icons.delete_rounded),
           ),
           IconButton(
             icon: const Icon(Icons.redo_rounded),
-            onPressed: ()=>redoText(),
+            onPressed: () => redoText(),
           ),
           IconButton(
             icon: const Icon(Icons.undo_rounded),
-            onPressed: ()=>undoText(),
+            onPressed: () => undoText(),
           ),
           IconButton(
             icon: const Icon(Icons.check),
@@ -172,109 +162,51 @@ class _TaskInfoState extends State<Taskinfo> {
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             child: Column(
               children: [
-                Container(
-                  child: TextFormField(
+                TextFormField(
+                  autofocus: true,
+                  maxLength: 32,
+                  cursorColor: Colors.black,
 
-                    autofocus: true,
-                    maxLength: 32,
-                    cursorColor: Colors.black,
-                    style: const TextStyle(
-                      fontSize: 30.0,
-                    ),
-                    controller: _titleController,
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(vertical: 0),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.transparent), // Transparent border
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors
-                                .transparent), // Transparent border when enabled
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Colors.transparent,
-                            width: 2.0), // Custom border when focused
-                      ),
-                      counterText: '',
-                    ),
-                    onChanged: (value){
-                      _historyString.add(value);
-                      _redoString.add(value);
-                      print(_historyString);
-                    },
+                  style: const TextStyle(
+                    fontSize: 30.0,
+                    fontWeight: FontWeight.bold
+                  ),
+
+                  controller: _titleController,
+
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'title',
+                    border: InputBorder.none,
+                    counterText: '',
+                  ),
+                  onChanged: (value) {
+                    _historyString.add(value);
+                    _redoString.add(value);
+                    print(_historyString);
+                  },
+                ),
+
+                TextFormField(
+                  enabled: false,
+                  cursorColor: Colors.grey,
+                  controller: _timeController,
+                  style: const TextStyle(fontSize: 12.0, color: Colors.grey),
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.zero,
+                    border: InputBorder.none,
                   ),
                 ),
-                Container(
-                  margin: EdgeInsets.all(0),
-                  padding: EdgeInsets.all(0),
-                  decoration: BoxDecoration(
-                      border: Border(
-                          bottom:
-                              BorderSide(color: Theme.of(context).cardColor, width: 1.0))),
-                  child: Container(
-                    child: TextFormField(
-                      cursorColor: Colors.grey,
-                      controller: _timeController,
-                      style:
-                          const TextStyle(fontSize: 12.0, color: Colors.grey),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.zero,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.transparent), // Transparent border
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors
-                                  .transparent), // Transparent border when enabled
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.transparent,
-                              width: 2.0), // Custom border when focused
-                        ),
-                      ),
-                    ),
+
+                TextFormField(
+                  controller: _descriptionController,
+                  style: const TextStyle(
+                    fontSize: 16.0,
                   ),
-                ),
-                Container(
-                  child: Column(
-                    children: [
-                      Container(
-                          margin: EdgeInsets.only(top: 10),
-                          alignment: Alignment.topLeft,
-                          child: Text("Description : ",style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold),)
-                      ),
-                      Container(
-                        child: TextFormField(
-                          controller: _descriptionController,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                          ),
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.zero,
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color:
-                                      Colors.transparent), // Transparent border
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Colors
-                                      .transparent), // Transparent border when enabled
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: Colors.transparent,
-                                  width: 2.0), // Custom border when focused
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.zero,
+                    border: InputBorder.none,
+                    hintText: 'description'
                   ),
                 )
               ],

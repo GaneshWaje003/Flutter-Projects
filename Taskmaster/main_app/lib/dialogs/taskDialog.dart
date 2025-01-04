@@ -46,6 +46,10 @@ class _stateTaskDialogg extends State<Taskdialog> {
         'completed': false,
       };
 
+
+      //checking user
+      await db.initUser();
+
       // Add the data to Firebase
       await db.addTask(taskInfo);
 

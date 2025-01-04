@@ -31,8 +31,9 @@ class _SignupState extends State<Signup> {
 
       var email =_emailController.text.trim();
       var password =  _passwordController.text.trim();
+      var username =  _usernameController.text.trim();
 
-    var isUserCreated = await db.addUserDetails(email,password);
+    var isUserCreated = await db.addUserDetails(email,password,username);
       if(await isUserCreated){
         _emailController.clear();
         _usernameController.clear();

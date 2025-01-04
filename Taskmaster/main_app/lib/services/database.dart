@@ -14,6 +14,30 @@ class DatabaseMethods {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  String? userId;
+  var userCollectionRef;
+
+  DatabaseMethods(){
+    if(userId == null){
+      initUser();
+    }
+  }
+
+  Future<void> initUser() async {
+    try {
+      if (auth.currentUser != null) {
+        userId = auth.currentUser?.uid ?? "";
+        userCollectionRef = db.collection('users').doc(userId);
+        print("user intialized with uid : $userId");
+      }else{
+        print("intiUser() : \n not authenticated user found\n");
+        throw Exception("authendticated user not found \n");
+      }
+    } catch (e) {
+      print('Exception while initUser methods : \n $e');
+    }
+  }
+
   Future<bool> isUserPresent() async {
     if (user != null) {
       return true;
@@ -21,17 +45,28 @@ class DatabaseMethods {
     return false;
   }
 
-  // Future<bool> signInWithGoogle() async{
-  //
-  //   auth.
-  //
-  //   return false;
-  // }
-
-  Future<bool> addUserDetails(String email, String password) async {
+  Future<bool> addUserDetails(
+      String email, String password, String username) async {
     try {
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
           email: email, password: password);
+
+      String? userIdRef = userCredential.user?.uid;
+
+      if (userIdRef == null || userIdRef.isEmpty) {
+        throw Exception(
+            "User ID is null or empty. Ensure the user is logged in.");
+      }
+
+      db.collection("users").doc(userIdRef).set({
+        "uid": userIdRef,
+        "username": username,
+        "email": email,
+        "password": password
+      });
+
+      initUser();
+
       print('User is created ${userCredential.user}');
       return true;
     } on FirebaseAuthException catch (e) {
@@ -97,14 +132,15 @@ class DatabaseMethods {
 
   Future<bool> addTask(Map<String, dynamic> taskData) async {
     try {
+
       var taskToCheck = taskData['task'];
       bool isDataOk = await checkDuplication("Tasks", "task", taskToCheck);
       if (isDataOk) {
         print('Task not added , duplicate data');
         return false;
       } else {
-        db.collection("Tasks").add(taskData);
-        db.collection("DailyTasks").add(taskData);
+        userCollectionRef.collection("Tasks").add(taskData);
+        userCollectionRef.collection("DailyTasks").add(taskData);
         print('Task added sucessfully');
         return true;
       }
@@ -122,7 +158,7 @@ class DatabaseMethods {
           await checkDuplication("CalenderTasks", 'task', checkAttr);
 
       if (!isDuplicate) {
-        db.collection(collection).add(taskData);
+        userCollectionRef.collection(collection).add(taskData);
         print('Task added sucessfully');
         return true;
       } else {
@@ -135,14 +171,18 @@ class DatabaseMethods {
   }
 
   Stream<QuerySnapshot> fetchData(String collectionName) {
-    return db.collection(collectionName).snapshots();
+    return userCollectionRef.collection(collectionName).snapshots();
   }
 
-  Future<bool> delTask(
-      String givenId, void Function(String) onTaskDeleted) async {
+  Future<bool> delTask(String givenId, String collection,
+      void Function(String) onTaskDeleted) async {
     try {
-      await db.collection("DailyTasks").doc(givenId).delete();
-      await db.collection("Tasks").doc(givenId).delete();
+      if (collection == 'Tasks') {
+        await userCollectionRef.collection("DailyTasks").doc(givenId).delete();
+      }
+
+      await userCollectionRef.collection(collection).doc(givenId).delete();
+
       print('Task deleted successfully');
       onTaskDeleted(givenId);
       return true;
@@ -155,7 +195,11 @@ class DatabaseMethods {
   Future<bool> delCalTask(
       String givenId, void Function(String) onTaskDeleted) async {
     try {
-      await db.collection("CalenderTasks").doc(givenId).delete().then((_) {
+      await userCollectionRef
+          .collection("CalenderTasks")
+          .doc(givenId)
+          .delete()
+          .then((_) {
         print('Task deleted successfully');
         onTaskDeleted(givenId);
         return true;
@@ -168,7 +212,7 @@ class DatabaseMethods {
 
   Future<List<QueryDocumentSnapshot>> searchTasks(String taskTitle) async {
     try {
-      QuerySnapshot snapshot = await db
+      QuerySnapshot snapshot = await userCollectionRef
           .collection('Tasks')
           .where('task', isEqualTo: taskTitle)
           .get();
@@ -180,18 +224,28 @@ class DatabaseMethods {
     }
   }
 
-  Future<void> updateData(String docId, Map<String, dynamic> data) async {
-    // ref = FirebaseFirestore.instance.collection('Task').doc(docId)
+  Future<void> updateData(
+      String docId, String collection, Map<String, dynamic> data) async {
+    if (collection == 'Tasks') {
+      userCollectionRef
+          .collection('DailyTasks')
+          .doc(docId)
+          .update(data)
+          .then((_) {
+        print('TodayTasks udpated ');
+      });
+    }
 
     var tasktitle = data['task'];
-    db.collection('Tasks').doc(docId).update(data).then((_) {
+    userCollectionRef.collection(collection).doc(docId).update(data).then((_) {
       print('$tasktitle udpated ');
     });
   }
 
   Future<Map<String, dynamic>> getUserData() async {
     try {
-      User? user = FirebaseAuth.instance.currentUser;
+      initUser();
+      DocumentSnapshot userDoc =  await userCollectionRef.get();
 
       if (user == null) {
         print("User is null");
@@ -201,9 +255,9 @@ class DatabaseMethods {
           'userPhotourl': null
         };
       } else {
-        String? email = user.email ?? 'Unknown';
-        String? userUrl = user.photoURL;
-        String? userName = user.displayName;
+        String? email = user?.email ?? 'Unknown';
+        String? userUrl = user?.photoURL;
+        String? userName = userDoc.get('username');
 
         return {
           'userName': userName ?? 'Unknown',
@@ -221,7 +275,8 @@ class DatabaseMethods {
     List<QueryDocumentSnapshot> dataList = [];
 
     try {
-      QuerySnapshot querySnapshot = await db.collection(collection).get();
+      QuerySnapshot querySnapshot =
+          await userCollectionRef.collection(collection).get();
       dataList = querySnapshot.docs;
       print("Data fetched for " + collection);
       return dataList;
@@ -244,7 +299,8 @@ class DatabaseMethods {
   Future<List<String>> getSpecificData(String collection, String attr) async {
     List<String> fList = [];
 
-    QuerySnapshot snapshots = await db.collection(collection).get();
+    QuerySnapshot snapshots =
+        await userCollectionRef.collection(collection).get();
 
     fList = snapshots.docs.map((doc) {
       var data = doc.data() as Map<String, dynamic>;
@@ -258,15 +314,17 @@ class DatabaseMethods {
     List<AlarmData> flist = [];
 
     try {
-      querySnapshot = await db.collection('Tasks').get();
+      querySnapshot = await userCollectionRef.collection('Tasks').get();
 
       flist = querySnapshot.docs.map((doc) {
         var data = doc.data() as Map<String, dynamic>;
 
         var hour = int.tryParse(data['hour']!.toString()) ?? 0;
         final minute = int.tryParse(data['min']!.toString()) ?? 0;
-        final task = data['task']?.toString() ?? 'No Task'; // Default if missing
-        final description = data['description']?.toString() ?? ''; // Empty string if missing
+        final task =
+            data['task']?.toString() ?? 'No Task'; // Default if missing
+        final description =
+            data['description']?.toString() ?? ''; // Empty string if missing
 
         final ampm = data['ampm']?.toString().toUpperCase();
 

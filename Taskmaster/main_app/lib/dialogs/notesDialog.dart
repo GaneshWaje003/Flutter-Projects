@@ -11,14 +11,16 @@ class _todayTaskState extends State<TodayTaskDialog> {
     var _selectOption;
     String _selectedPeriod = 'AM';
     DatabaseMethods db = DatabaseMethods();
-
+    DateTime cTime = DateTime.now();
     TextEditingController _taskController = TextEditingController();
     TextEditingController _descriptionController = TextEditingController();
 
     void _addNotes(){
+      String todayDate = '${cTime.day}/${cTime.month}/${cTime.year}';
       Map <String,dynamic> taskInfo = {
         'task':_taskController.text.trim(),
-        'description':_descriptionController.text.trim()
+        'description':_descriptionController.text.trim(),
+        'cDate':todayDate,
       };
 
       db.uploadTask(taskInfo,'Notes');
