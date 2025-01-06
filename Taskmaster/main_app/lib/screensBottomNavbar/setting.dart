@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:main_app/Login.dart';
 import 'package:main_app/services/database.dart';
 import 'package:main_app/settingScreens/aobut.dart';
@@ -13,10 +17,34 @@ class Setting extends StatefulWidget {
 
 class _SettingState extends State<Setting> {
 
+
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _dpImage;
+
+  Future<void> _ImagePicker(ImageSource source) async{
+    final XFile? _pickedFile = await _imagePicker.pickImage(source: source);
+
+    if(_pickedFile != null){
+      setState(() {
+        _dpImage = File(_pickedFile.path);
+      });
+    }
+
+  }
+
+  void chooseImage(){
+    _ImagePicker(ImageSource.gallery);
+  }
   DatabaseMethods db = DatabaseMethods();
 
   void logOutuser(context) async {
     var isLoggedOut = await db.logOut();
+    Fluttertoast.showToast(
+      msg: "userd logged out",
+      toastLength: Toast.LENGTH_SHORT,
+      textColor: Colors.white,
+      backgroundColor: Colors.green,
+    );
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => Login()));
   }
@@ -104,18 +132,21 @@ class _SettingState extends State<Setting> {
                               border: Border.all(color: Colors.black),
                               borderRadius: BorderRadius.all(Radius.circular(50)),
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child:
-                                  userPhotourl != null && userPhotourl.isNotEmpty
-                                      ? Image.network(
-                                          userPhotourl,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : Image.asset(
-                                          'assets/defaultUserImage.png',
-                                          fit: BoxFit.cover,
-                                        ),
+                            child: GestureDetector(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child:
+                                    userPhotourl != null && userPhotourl.isNotEmpty
+                                        ? Image.network(
+                                            userPhotourl,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            'assets/defaultUserImage.png',
+                                            fit: BoxFit.cover,
+                                          ),
+                              ),
+                              onTap:chooseImage ,
                             ),
                           ),
                           Container(

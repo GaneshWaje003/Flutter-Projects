@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:main_app/alarmData.dart';
 
 class DatabaseMethods {
@@ -49,7 +50,15 @@ class DatabaseMethods {
       String email, String password, String username) async {
     try {
       UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+          email: email, password: password
+      );
+
+      Fluttertoast.showToast(
+        msg: "user created email : ${email}",
+        toastLength: Toast.LENGTH_LONG,
+        textColor: Colors.white,
+        backgroundColor: Colors.green,
+      );
 
       String? userIdRef = userCredential.user?.uid;
 
@@ -107,7 +116,12 @@ class DatabaseMethods {
       );
 
       if (userCredential.user != null) {
-        print("User is successfully logged in");
+        Fluttertoast.showToast(
+            msg: "user Logged in successfully ",
+            toastLength: Toast.LENGTH_SHORT,
+          textColor: Colors.white,
+          backgroundColor: Colors.green,
+        );
         return "Login successful";
       } else {
         print("Login failed");
@@ -115,13 +129,28 @@ class DatabaseMethods {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        Fluttertoast.showToast(
+          msg: "${e.message}",
+          toastLength: Toast.LENGTH_SHORT,
+          textColor: Colors.white,
+          backgroundColor: Colors.red,
+        );
         return 'No user found for that email.';
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        Fluttertoast.showToast(
+          msg: "${e.message}",
+          toastLength: Toast.LENGTH_SHORT,
+          textColor: Colors.white,
+          backgroundColor: Colors.red,
+        );
         return 'Wrong password provided for that user.';
       } else {
-        print('Login failed: ${e.message}');
+        Fluttertoast.showToast(
+          msg: "${e.message}",
+          toastLength: Toast.LENGTH_SHORT,
+          textColor: Colors.white,
+          backgroundColor: Colors.red,
+        );
         return 'Login failed: ${e.message}';
       }
     } catch (e) {
@@ -290,7 +319,12 @@ class DatabaseMethods {
   Future<bool> logOut() async {
     await FirebaseAuth.instance.signOut();
     if (user == null) {
-      print("user logged out");
+      Fluttertoast.showToast(
+        msg: "user logged out",
+        toastLength: Toast.LENGTH_LONG,
+        textColor: Colors.white,
+        backgroundColor: Colors.green,
+      );
       return true;
     }
     return false;

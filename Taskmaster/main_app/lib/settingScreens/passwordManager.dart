@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PasswordManager extends StatefulWidget {
   @override
@@ -6,6 +10,8 @@ class PasswordManager extends StatefulWidget {
 }
 
 class _PasswordManagerState extends State<PasswordManager> {
+
+  
   @override
   Widget build(BuildContext context) {
 
@@ -56,7 +62,10 @@ class _PasswordManagerState extends State<PasswordManager> {
 
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add , color: Theme.of(context).colorScheme.onPrimary,),
-          onPressed: () {}),
+          onPressed: () {
+            Fluttertoast.showToast(msg: "Error 404"
+            ,toastLength : Toast.LENGTH_SHORT);
+          }),
     );
 
   }
