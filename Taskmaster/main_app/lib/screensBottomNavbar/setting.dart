@@ -51,19 +51,20 @@ class _SettingState extends State<Setting> {
     });
 
     var isLoggedOut = await db.logOut();
-    Fluttertoast.showToast(
-      msg: "userd logged out",
-      toastLength: Toast.LENGTH_SHORT,
-      textColor: Colors.white,
-      backgroundColor: Colors.green,
-    );
-    Future.delayed(Duration(seconds: 5),(){
-    Navigator.pushNamed(
-        context, '/login');
-    });
 
-    setState(() {
-      toShowLoading = false;
+    Future.delayed(Duration(seconds: 2),(){
+      setState(() {
+        toShowLoading = false;
+      });
+
+      Fluttertoast.showToast(
+        msg: "userd logged out",
+        toastLength: Toast.LENGTH_SHORT,
+        textColor: Colors.white,
+        backgroundColor: Colors.green,
+      );
+
+      Navigator.pushNamed(context, '/login');
     });
   }
 
@@ -93,21 +94,21 @@ class _SettingState extends State<Setting> {
       [
         Icons.language,
         'Language',
-        (context) => Navigator.push(
-            context, MaterialPageRoute(builder: (context) => Language())),
+        (context) => Navigator.pushNamed(
+            context, '/language'),
       ],
       [
         Icons.account_circle_sharp,
         'About',
         (context) {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => About()));
+          Navigator.pushNamed(
+              context,'/about');
         }
       ],
       [Icons.phone_rounded, 'Contact', () => print('hello theme')],
       [Icons.lock_rounded, 'password Manager', (context) {
-        Navigator.push(
-            context,MaterialPageRoute(builder: (context)=>PasswordManager()));
+        Navigator.pushNamed(
+            context,'/passwordManager');
         }
         ],
       [Icons.logout, 'Logout', (context) => logOutuser(context)]
@@ -252,7 +253,7 @@ class _SettingState extends State<Setting> {
           ),
             if(toShowLoading)
               Container(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black45,
                 child: Center(
                   child: CircularProgressIndicator(),
                 ),

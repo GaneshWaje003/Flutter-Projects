@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'package:main_app/mainPage.dart';
 import 'package:main_app/services/database.dart';
 import 'package:main_app/signup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -15,9 +16,18 @@ class _loginstate extends State<Login> {
   TextEditingController _passwordController = TextEditingController();
   final _key =
       GlobalKey<FormState>(); // for authentication of the textformfield
-  bool _obsecureText = true;
   DatabaseMethods db = DatabaseMethods();
-  bool isLoading = false;
+  bool _obsecureText = true;
+  bool isLoading = false , rememberUser = false;
+
+  // late SharedPreferences pref;
+
+  Future<void> saveUserData() async{
+      final SharedPreferences pref = await SharedPreferences.getInstance();
+      await pref.setString('username',_usernameController.text.toString());
+      await pref.setString('password',_passwordController.text.toString());
+      print("user data saved ");
+  }
 
   Future<void> loginUser() async {
     setState(() {
@@ -28,12 +38,14 @@ class _loginstate extends State<Login> {
       // If the form is valid, proceed with the login logic
       var username = _usernameController.text.trim();
       var pass = _passwordController.text.trim();
-
       var isUserCreated = await db.loginUser(username, pass);
+
       if (isUserCreated == "Login successful") {
         setState(() {
           isLoading = false;
         });
+
+        if(rememberUser) saveUserData();
 
         await Navigator.pushNamed(context, '/home');
 
@@ -211,7 +223,17 @@ class _loginstate extends State<Login> {
                                         child: Text("Remeber me"),
                                         onTap: (){},
                                       ),
-                                      Checkbox(value: false, onChanged: (value){})
+                                      Checkbox(
+                                          value: rememberUser,
+                                          onChanged: (bool? value){
+                                              setState(() {
+                                                rememberUser = value ?? false;
+                                              });
+                                          },
+                                        activeColor: Colors.blue,
+                                        checkColor: Colors.white,
+
+                                      )
                                     ],
                                   ) ,
                                 ),

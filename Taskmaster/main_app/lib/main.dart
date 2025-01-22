@@ -13,6 +13,9 @@ import 'package:main_app/firebase_options.dart';
 import 'package:main_app/mainPage.dart';
 import 'package:main_app/notifactionService.dart';
 import 'package:main_app/services/database.dart';
+import 'package:main_app/settingScreens/aobut.dart';
+import 'package:main_app/settingScreens/language.dart';
+import 'package:main_app/settingScreens/passwordManager.dart';
 import 'package:main_app/signup.dart';
 import 'package:main_app/splashscreen.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -153,6 +156,9 @@ class MyApp extends StatelessWidget {
         '/login':(context)=>Login(),
         '/signup':(context)=>Signup(),
         '/home':(context)=>Mainpage(),
+        '/language':(context)=>Language(),
+        '/about':(context)=>About(),
+        '/passwordManager':(context)=>PasswordManager(),
       },
 
     );
