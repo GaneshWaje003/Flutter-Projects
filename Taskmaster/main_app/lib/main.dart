@@ -6,11 +6,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:main_app/Login.dart';
 import 'package:main_app/alarmData.dart';
 import 'package:main_app/alarmPage.dart';
 import 'package:main_app/firebase_options.dart';
+import 'package:main_app/mainPage.dart';
 import 'package:main_app/notifactionService.dart';
 import 'package:main_app/services/database.dart';
+import 'package:main_app/signup.dart';
 import 'package:main_app/splashscreen.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:workmanager/src/workmanager.dart';
@@ -89,6 +92,7 @@ void callbackDispatcher() {
 }
 
 void main() async {
+
   tz.initializeTimeZones();
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -143,6 +147,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       // Set this to false
       home: splashscreen(),
+
+      initialRoute: '/',
+      routes: {
+        '/login':(context)=>Login(),
+        '/signup':(context)=>Signup(),
+        '/home':(context)=>Mainpage(),
+      },
+
     );
   }
 }
