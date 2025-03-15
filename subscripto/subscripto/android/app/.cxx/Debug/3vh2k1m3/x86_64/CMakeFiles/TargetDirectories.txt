@@ -1,0 +1,2 @@
+D:/Coding/Languages/Flutter projects/subscripto/subscripto/android/app/.cxx/Debug/3vh2k1m3/x86_64/CMakeFiles/edit_cache.dir
+D:/Coding/Languages/Flutter projects/subscripto/subscripto/android/app/.cxx/Debug/3vh2k1m3/x86_64/CMakeFiles/rebuild_cache.dir
